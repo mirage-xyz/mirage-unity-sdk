@@ -13,6 +13,14 @@ using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation
 {
+	public class EventFilterData {
+		public object[] filterTopic1;
+		public object[] filterTopic2;
+		public object[] filterTopic3;
+        public BlockParameter fromBlock;
+		public BlockParameter toBlock;
+	}
+
 	internal class Contract : IContract
 	{
 		private readonly string _abi;
@@ -35,15 +43,32 @@ namespace MirageSDK.Core.Implementation
 			return contract.QueryAsync<TFieldData, TReturnType>(requestData);
 		}
 
-		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>() where TEvDto : IEventDTO, new()
+		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter) where TEvDto : IEventDTO, new()
 		{
+			var isBockNumbersExisted = evFilter.fromBlock != null || evFilter.toBlock != null;
 			var eventHandler = _web3.Eth.GetEvent<TEvDto>(_address);
+			
+			NewFilterInput filters = eventHandler.CreateFilterInput();
+			
+			if (isBockNumbersExisted) {
+				filters = eventHandler.CreateFilterInput(evFilter.fromBlock, evFilter.toBlock);
+			}
+			if (evFilter.filterTopic1 != null && isBockNumbersExisted)
+			{
+				filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.fromBlock, evFilter.toBlock);
+			}
+			if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && isBockNumbersExisted)
+			{
+				filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2, evFilter.fromBlock, evFilter.toBlock);
+			}
+			if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && evFilter.filterTopic3 != null && isBockNumbersExisted)
+			{
+				filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2, evFilter.filterTopic3, evFilter.fromBlock, evFilter.toBlock);
+			}
 
-			var filterAllTransferEventsForContract = eventHandler.CreateFilterInput();
-
-			return eventHandler.GetAllChangesAsync(filterAllTransferEventsForContract);
+			return eventHandler.GetAllChangesAsync(filters);
 		}
-
+		
 		public Task<string> CallMethod(string methodName, object[] arguments, string gas = null)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
