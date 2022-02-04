@@ -45,7 +45,7 @@ namespace MirageSDK.Examples
 	
 		public async void GetEvents()
 		{
-			var events = await _erc721Contract.GetAllChanges<TransferEventDTO>();
+			var events = await _erc721Contract.GetAllChanges<TransferEventDTO>(null);
 
 			foreach (var ev in events)
 			{

@@ -13,11 +13,12 @@ using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation
 {
-	public class EventFilterData {
+	public class EventFilterData
+	{
 		public object[] filterTopic1;
 		public object[] filterTopic2;
 		public object[] filterTopic3;
-        public BlockParameter fromBlock;
+		public BlockParameter fromBlock;
 		public BlockParameter toBlock;
 	}
 
@@ -43,32 +44,56 @@ namespace MirageSDK.Core.Implementation
 			return contract.QueryAsync<TFieldData, TReturnType>(requestData);
 		}
 
-		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter) where TEvDto : IEventDTO, new()
+		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter = null)
+			where TEvDto : IEventDTO, new()
 		{
-			var isBockNumbersExisted = evFilter.fromBlock != null || evFilter.toBlock != null;
-			var eventHandler = _web3.Eth.GetEvent<TEvDto>(_address);
-			
-			NewFilterInput filters = eventHandler.CreateFilterInput();
-			
-			if (isBockNumbersExisted) {
-				filters = eventHandler.CreateFilterInput(evFilter.fromBlock, evFilter.toBlock);
-			}
-			if (evFilter.filterTopic1 != null && isBockNumbersExisted)
-			{
-				filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.fromBlock, evFilter.toBlock);
-			}
-			if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && isBockNumbersExisted)
-			{
-				filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2, evFilter.fromBlock, evFilter.toBlock);
-			}
-			if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && evFilter.filterTopic3 != null && isBockNumbersExisted)
-			{
-				filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2, evFilter.filterTopic3, evFilter.fromBlock, evFilter.toBlock);
-			}
+			Event<TEvDto> eventHandler = _web3.Eth.GetEvent<TEvDto>(_address);
+
+			var filters = ApplyFilters(eventHandler, evFilter);
 
 			return eventHandler.GetAllChangesAsync(filters);
 		}
-		
+
+		private NewFilterInput ApplyFilters<TEvDto>(Event<TEvDto> eventHandler, EventFilterData evFilter = null)
+			where TEvDto : IEventDTO, new()
+		{
+			NewFilterInput filters = null;
+			if (evFilter == null)
+			{
+				filters = eventHandler.CreateFilterInput();
+			}
+			else
+			{
+				var isBockNumbersExisted = evFilter.fromBlock != null || evFilter.toBlock != null ||
+				                           evFilter.fromBlock != null && evFilter.toBlock != null;
+				if (isBockNumbersExisted)
+				{
+					filters = eventHandler.CreateFilterInput(evFilter.fromBlock, evFilter.toBlock);
+				}
+
+				if (evFilter.filterTopic1 != null && isBockNumbersExisted)
+				{
+					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.fromBlock,
+						evFilter.toBlock);
+				}
+
+				if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && isBockNumbersExisted)
+				{
+					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2,
+						evFilter.fromBlock, evFilter.toBlock);
+				}
+
+				if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && evFilter.filterTopic3 != null &&
+				    isBockNumbersExisted)
+				{
+					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2,
+						evFilter.filterTopic3, evFilter.fromBlock, evFilter.toBlock);
+				}
+			}
+
+			return filters;
+		}
+
 		public Task<string> CallMethod(string methodName, object[] arguments, string gas = null)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
@@ -86,7 +111,7 @@ namespace MirageSDK.Core.Implementation
 		}
 
 		public async Task<string> SendTransaction(
-			string to, 
+			string to,
 			string data = null,
 			string value = null,
 			string gas = null)
