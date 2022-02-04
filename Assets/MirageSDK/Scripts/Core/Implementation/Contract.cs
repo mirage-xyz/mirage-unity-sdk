@@ -44,10 +44,10 @@ namespace MirageSDK.Core.Implementation
 			return contract.QueryAsync<TFieldData, TReturnType>(requestData);
 		}
 
-		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter = null)
+		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter)
 			where TEvDto : IEventDTO, new()
 		{
-			Event<TEvDto> eventHandler = _web3.Eth.GetEvent<TEvDto>(_address);
+			var eventHandler = _web3.Eth.GetEvent<TEvDto>(_address);
 
 			var filters = ApplyFilters(eventHandler, evFilter);
 
@@ -64,30 +64,24 @@ namespace MirageSDK.Core.Implementation
 			}
 			else
 			{
-				var isBockNumbersExisted = evFilter.fromBlock != null || evFilter.toBlock != null ||
-				                           evFilter.fromBlock != null && evFilter.toBlock != null;
-				if (isBockNumbersExisted)
+				if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && evFilter.filterTopic3 != null)
 				{
-					filters = eventHandler.CreateFilterInput(evFilter.fromBlock, evFilter.toBlock);
+					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2,
+						evFilter.filterTopic3, evFilter.fromBlock, evFilter.toBlock);
 				}
-
-				if (evFilter.filterTopic1 != null && isBockNumbersExisted)
-				{
-					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.fromBlock,
-						evFilter.toBlock);
-				}
-
-				if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && isBockNumbersExisted)
+				else if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null)
 				{
 					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2,
 						evFilter.fromBlock, evFilter.toBlock);
 				}
-
-				if (evFilter.filterTopic1 != null && evFilter.filterTopic2 != null && evFilter.filterTopic3 != null &&
-				    isBockNumbersExisted)
+				else if (evFilter.filterTopic1 != null)
 				{
-					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.filterTopic2,
-						evFilter.filterTopic3, evFilter.fromBlock, evFilter.toBlock);
+					filters = eventHandler.CreateFilterInput(evFilter.filterTopic1, evFilter.fromBlock,
+						evFilter.toBlock);
+				}
+				else
+				{
+					filters = eventHandler.CreateFilterInput(evFilter.fromBlock, evFilter.toBlock);
 				}
 			}
 

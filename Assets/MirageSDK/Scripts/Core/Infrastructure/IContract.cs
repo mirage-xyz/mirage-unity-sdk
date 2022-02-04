@@ -18,7 +18,7 @@ namespace MirageSDK.Core.Infrastructure
 			string value = null,
 			string gas = null);
 
-		Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter) where TEvDto : IEventDTO, new();
+		Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter = null) where TEvDto : IEventDTO, new();
 
 		Task<TReturnType> GetData<TFieldData, TReturnType>(TFieldData requestData = null)
 			where TFieldData : FunctionMessage, new();
