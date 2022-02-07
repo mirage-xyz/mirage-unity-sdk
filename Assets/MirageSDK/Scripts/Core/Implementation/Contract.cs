@@ -1,13 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 using Nethereum.JsonRpc.Client;
+using Nethereum.JsonRpc.WebSocketStreamingClient;
 using Nethereum.RPC.Eth.DTOs;
+using Nethereum.RPC.Eth.Subscriptions;
 using Nethereum.RPC.Eth.Transactions;
 using Nethereum.Web3;
+using UnityEngine;
 using WalletConnectSharp.Core.Models.Ethereum;
 using WalletConnectSharp.Unity;
 
@@ -44,14 +48,46 @@ namespace MirageSDK.Core.Implementation
 			return contract.QueryAsync<TFieldData, TReturnType>(requestData);
 		}
 
-		public Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter)
+		public async Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter)
 			where TEvDto : IEventDTO, new()
 		{
 			var eventHandler = _web3.Eth.GetEvent<TEvDto>(_address);
 
 			var filters = ApplyFilters(eventHandler, evFilter);
+			
+			using (var client = new StreamingWebSocketClient("wss://mainnet.infura.io/ws/v3/7238211010344719ad14a89db874158c"))
+			{
+				var subscription = new EthLogsObservableSubscription(client);
+				subscription.GetSubscriptionDataResponsesAsObservable().
+					Subscribe(log =>
+					{
+						try
+						{
+							EventLog<TEvDto> decoded = Event<TEvDto>.DecodeEvent(log);
+							if (decoded != null)
+							{
+								decimal reserve0 = Web3.Convert.FromWei(decoded.Event.Reserve0);
+								decimal reserve1 = Web3.Convert.FromWei(decoded.Event.Reserve1);
+								Console.WriteLine($@"Price={reserve0 / reserve1}");
+							}
+							else Console.WriteLine(@"Found not standard transfer log");
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine(@"Log Address: " + log.Address + @" is not a standard transfer log:", ex.Message);
+						}
+					});
 
-			return eventHandler.GetAllChangesAsync(filters);
+				await client.StartAsync();
+//				subscription.GetSubscribeResponseAsObservable().Subscribe(id => Console.WriteLine($"Subscribed with id: {id}"));
+				await subscription.SubscribeAsync(filters);
+
+				Console.ReadLine();
+
+				await subscription.UnsubscribeAsync();
+			}
+
+			return await eventHandler.GetAllChangesAsync(filters);
 		}
 
 		private NewFilterInput ApplyFilters<TEvDto>(Event<TEvDto> eventHandler, EventFilterData evFilter = null)
