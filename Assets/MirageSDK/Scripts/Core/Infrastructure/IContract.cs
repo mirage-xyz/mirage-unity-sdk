@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MirageSDK.Core.Implementation;
@@ -17,6 +18,8 @@ namespace MirageSDK.Core.Infrastructure
 			string data = null,
 			string value = null,
 			string gas = null);
+
+		Task<List<EventLog<TEvDto>>> SubscribeEvents<TEvDto>(EventFilterData evFilter, Action<EventLog<TEvDto>> func) where TEvDto : IEventDTO, new();
 
 		Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter = null) where TEvDto : IEventDTO, new();
 
