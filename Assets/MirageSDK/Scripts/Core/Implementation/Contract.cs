@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MirageSDK.Core.Data;
 using MirageSDK.Core.Infrastructure;
@@ -13,7 +12,7 @@ using WalletConnectSharp.Core.Models.Ethereum;
 using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation
-{	
+{
 	internal class Contract : IContract
 	{
 		private readonly string _contractABI;
@@ -47,14 +46,14 @@ namespace MirageSDK.Core.Implementation
 		public Task<string> CallMethod(string methodName, object[] arguments = null, string gas = null)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
-			var raw = _web3Provider.Eth.GetContract(_contractABI, _contractAddress)
-				.GetFunction(methodName)
-				.CreateTransactionInput(activeSessionAccount, arguments);
+			var contract = _web3Provider.Eth.GetContract(_contractABI, _contractAddress);
+			var callFunction = contract.GetFunction(methodName);
+			var transactionInput = callFunction.CreateTransactionInput(activeSessionAccount, arguments);
 
-			return SendTransaction(_contractAddress, raw.Data, null, gas);
+			return SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 		}
 		
-		public EventController SendMethod(string methodName, object[] arguments = null, string gas = null)
+		public EventController Web3SendMethod(string methodName, object[] arguments = null, string gas = null)
 		{
 			var evController = new EventController();
 		
@@ -62,22 +61,23 @@ namespace MirageSDK.Core.Implementation
 				.GetFunction(methodName)
 				.CreateTransactionInput(WalletConnect.ActiveSession.Accounts[0], arguments);
 		
-			// evController.InvokeSendingEvent(raw);
+			evController.InvokeSendingEvent(raw);
 				
-			Task<string> task = SendTransaction(_contractAddress, raw.Data, null, gas);
+			Task<string> sendTransactionTask = SendTransaction(_contractAddress, raw.Data, gas: gas);
 			
-			// evController.InvokeSentEvent(raw);
-			
-			task.ContinueWith(_task =>
+			evController.InvokeSentEvent(raw);
+						
+			sendTransactionTask.ContinueWith(task =>
 			{
-				if (!_task.IsFaulted)
+				if (!task.IsFaulted)
 				{
-					var transactionHash = _task.Result;
+					var transactionHash = task.Result;
+					evController.SetTransactionHash(transactionHash);
 					LoadReceipt(transactionHash, evController);
 				}
 				else
 				{
-					evController.SetError(_task.Exception);
+					evController.SetError(task.Exception);
 				}
 			});
 
@@ -85,20 +85,18 @@ namespace MirageSDK.Core.Implementation
 		}
 	
 		private void LoadReceipt(string transactionHash, EventController evController)
-		{
-			evController.SetTransactionHash(transactionHash);			
-			
-			var receiptTask = GetTransactionReceipt(transactionHash);
-			receiptTask.ContinueWith(_task =>
+		{		
+			var getReceiptTask = GetTransactionReceipt(transactionHash);
+			getReceiptTask.ContinueWith(task =>
 			{
-				if (!_task.IsFaulted)
+				if (!task.IsFaulted)
 				{
-					var receipt = _task.Result;
+					var receipt = task.Result;
 					evController.SetReceipt(receipt);
 				}
 				else
 				{
-					evController.SetError(_task.Exception);
+					evController.SetError(task.Exception);
 				}
 			});
 		}

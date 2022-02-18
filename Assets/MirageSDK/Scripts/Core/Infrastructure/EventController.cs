@@ -13,27 +13,27 @@ namespace MirageSDK.Core.Infrastructure
 
 		public void InvokeSendingEvent(TransactionInput transaction)
 		{
-			OnSending.Invoke(this, transaction);
+			OnSending?.Invoke(this, transaction);
 		}
 	
 		public void InvokeSentEvent(TransactionInput transaction)
 		{
-			OnSent.Invoke(this, transaction);
+			OnSent?.Invoke(this, transaction);
 		}
 	
 		public void SetTransactionHash(string transactionHash)
 		{
-			OnTransactionHash.Invoke(this, transactionHash);
+			OnTransactionHash?.Invoke(this, transactionHash);
 		}
 
 		public void SetReceipt(TransactionReceipt receipt)
 		{
-			OnReceipt.Invoke(this, receipt);
+			OnReceipt?.Invoke(this, receipt);
 		}
 
 		public void SetError(Exception error)
 		{
-			OnError.Invoke(this, error);
+			OnError?.Invoke(this, error);
 		}
 	}
 }

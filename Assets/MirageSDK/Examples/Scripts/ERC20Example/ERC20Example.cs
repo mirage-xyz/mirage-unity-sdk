@@ -37,10 +37,25 @@ namespace MirageSDK.Examples.Scripts.ERC20Example
 		
 		public void SendMint()
 		{		
-			var promiEvent = _erc20Contract.SendMethod("mint", new object[0]);
-			promiEvent.OnTransactionHash += (s, transactionHash) => Debug.Log("Hash: " + transactionHash);
-			promiEvent.OnReceipt += (s, _receipt) => Debug.Log("Receipt: " + _receipt.Status);
-			promiEvent.OnError += (s, err) => Debug.Log("Error: " + err.Message);
+			var evController = _erc20Contract.SendMethod("mint", new object[0]);
+			evController.OnTransactionHash += HandleTransactionHash;
+			evController.OnReceipt += HandleReceipt;
+			evController.OnError += HandleError;
+		}
+
+		public void HandleTransactionHash(object sender, string transactionHash)
+		{
+			Debug.Log($"transactionHash: {transactionHash}");
+		}
+
+		public void HandleReceipt(object sender, TransactionReceipt receipt)
+		{
+			Debug.Log("Receipt: " + receipt.Status);
+		}
+		
+		public void HandleError(object sender, Exception err)
+		{
+			Debug.Log("Error: " + err.Message);
 		}
 
 		public async void GetBalance()
