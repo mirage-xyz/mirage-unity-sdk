@@ -37,7 +37,7 @@ namespace MirageSDK.Examples.Scripts.ERC20Example
 		
 		public void SendMint()
 		{		
-			var evController = _erc20Contract.SendMethod("mint", new object[0]);
+			var evController = _erc20Contract.Web3SendMethod("mint", new object[0]);
 			evController.OnTransactionHash += HandleTransactionHash;
 			evController.OnReceipt += HandleReceipt;
 			evController.OnError += HandleError;
