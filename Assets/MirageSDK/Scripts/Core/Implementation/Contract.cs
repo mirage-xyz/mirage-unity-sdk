@@ -62,11 +62,11 @@ namespace MirageSDK.Core.Implementation
 				.GetFunction(methodName)
 				.CreateTransactionInput(WalletConnect.ActiveSession.Accounts[0], arguments);
 		
-			evController.InvokeSendingEvent(raw);
+			// evController.InvokeSendingEvent(raw);
 				
 			Task<string> task = SendTransaction(_contractAddress, raw.Data, null, gas);
 			
-			evController.InvokeSentEvent(raw);
+			// evController.InvokeSentEvent(raw);
 			
 			task.ContinueWith(_task =>
 			{
