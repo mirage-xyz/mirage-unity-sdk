@@ -34,6 +34,14 @@ namespace MirageSDK.Examples.Scripts.ERC20Example
 
 			Debug.Log($"Nonce: {trx.Nonce}");
 		}
+		
+		public void SendMint()
+		{		
+			var promiEvent = _erc20Contract.SendMethod("mint", new object[0]);
+			promiEvent.OnTransactionHash += (s, transactionHash) => Debug.Log("Hash: " + transactionHash);
+			promiEvent.OnReceipt += (s, _receipt) => Debug.Log("Receipt: " + _receipt.Status);
+			promiEvent.OnError += (s, err) => Debug.Log("Error: " + err.Message);
+		}
 
 		public async void GetBalance()
 		{

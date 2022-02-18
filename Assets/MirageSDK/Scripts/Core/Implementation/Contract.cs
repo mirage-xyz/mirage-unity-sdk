@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MirageSDK.Core.Data;
 using MirageSDK.Core.Infrastructure;
@@ -12,7 +13,7 @@ using WalletConnectSharp.Core.Models.Ethereum;
 using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation
-{
+{	
 	internal class Contract : IContract
 	{
 		private readonly string _contractABI;
@@ -51,6 +52,60 @@ namespace MirageSDK.Core.Implementation
 				.CreateTransactionInput(activeSessionAccount, arguments);
 
 			return SendTransaction(_contractAddress, raw.Data, null, gas);
+		}
+		
+		public EventController SendMethod(string methodName, object[] arguments = null, string gas = null)
+		{
+			var evController = new EventController();
+		
+			TransactionInput raw = _web3Provider.Eth.GetContract(_contractABI, _contractAddress)
+				.GetFunction(methodName)
+				.CreateTransactionInput(WalletConnect.ActiveSession.Accounts[0], arguments);
+		
+			evController.InvokeSendingEvent(raw);
+				
+			Task<string> task = SendTransaction(_contractAddress, raw.Data, null, gas);
+			
+			evController.InvokeSentEvent(raw);
+			
+			task.ContinueWith(_task =>
+			{
+				if (!_task.IsFaulted)
+				{
+					var transactionHash = _task.Result;
+					LoadReceipt(transactionHash, evController);
+				}
+				else
+				{
+					evController.SetError(_task.Exception);
+				}
+			});
+
+			return evController;
+		}
+	
+		private void LoadReceipt(string transactionHash, EventController evController)
+		{
+			evController.SetTransactionHash(transactionHash);			
+			
+			var receiptTask = GetTransactionReceipt(transactionHash);
+			receiptTask.ContinueWith(_task =>
+			{
+				if (!_task.IsFaulted)
+				{
+					var receipt = _task.Result;
+					evController.SetReceipt(receipt);
+				}
+				else
+				{
+					evController.SetError(_task.Exception);
+				}
+			});
+		}
+
+		public Task<TransactionReceipt> GetTransactionReceipt(string transactionHash)
+		{
+			return _web3Provider.TransactionManager.TransactionReceiptService.PollForReceiptAsync(transactionHash);
 		}
 
 		public Task<Transaction> GetTransactionInfo(string transactionReceipt)
