@@ -3,14 +3,13 @@ using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Examples.Scripts.ContractMessages;
 using MirageSDK.Examples.Scripts.ContractMessages.GameCharacterContract;
-using UnityEngine;
 
 namespace MirageSDK.Core.Utils
 {
 	/// <summary>
 	///     Class <c>ContractFunctions</c> Contains functions usable by all ERC721 standard contracts.
 	/// </summary>
-	public class ContractFunctions : MonoBehaviour
+	public class ContractFunctions
 	{
 		#region ERC721 Standard
 
@@ -77,6 +76,48 @@ namespace MirageSDK.Core.Utils
 			var tokenURI = await contract.GetData<TokenURIMessage, string>(tokenURIMessage);
 
 			return tokenURI;
+		}
+
+		// ERC-721 Non-Fungible Token Standard, optional enumeration extension
+		// See https://eips.ethereum.org/EIPS/eip-721
+		/// <summary>Returns the total amount of tokens stored by the contract.</summary>
+		private async UniTask<BigInteger> TotalSupply(IContract contract)
+		{
+			var totalSupplyMessage = new TotalSupplyMessage();
+			var totalSupply = await contract.GetData<TotalSupplyMessage, BigInteger>(totalSupplyMessage);
+
+			return totalSupply;
+		}
+
+		/// <summary>
+		///     Returns a token ID owned by "<paramref name="owner" />"  at a given "<paramref name="index" />" of its token list.
+		///     Use along with <see cref="BalanceOf" /> to enumerate all of "<paramref name="owner" />"'s tokens.
+		/// </summary>
+		private async UniTask<BigInteger> TokenOfOwnerByIndex(string owner, BigInteger index, IContract contract)
+		{
+			var tokenOfOwnerByIndexMessage = new TokenOfOwnerByIndexMessage
+			{
+				Owner = owner,
+				Index = index
+			};
+			var tokenId = await contract.GetData<TokenOfOwnerByIndexMessage, BigInteger>(tokenOfOwnerByIndexMessage);
+
+			return tokenId;
+		}
+
+		/// <summary>
+		///     Returns a token ID at a given "<paramref name="index" />" of all the tokens stored by the contract.
+		///     Use along with <see cref="TotalSupply" /> to enumerate all tokens.
+		/// </summary>
+		private async UniTask<BigInteger> TokenByIndex(BigInteger index, IContract contract)
+		{
+			var tokenByIndexMessage = new TokenByIndexMessage
+			{
+				Index = index
+			};
+			var tokenId = await contract.GetData<TokenByIndexMessage, BigInteger>(tokenByIndexMessage);
+
+			return tokenId;
 		}
 
 		#endregion
