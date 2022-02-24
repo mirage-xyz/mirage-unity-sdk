@@ -11,7 +11,9 @@ namespace MirageSDK.Core.Infrastructure
 	public interface IContract
 	{
 		Task<string> CallMethod(string methodName, object[] arguments = null, string gas = null);
-		EventController Web3SendMethod(string methodName, object[] arguments = null, string gas = null);
+
+		EventController Web3SendMethod(string methodName, object[] arguments, EventController evController = null,
+			string gas = null);
 		Task<Transaction> GetTransactionInfo(string transactionReceipt);
 
 		Task<string> SendTransaction(

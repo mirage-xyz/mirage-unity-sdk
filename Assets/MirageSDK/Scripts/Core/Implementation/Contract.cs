@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿﻿﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Data;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
@@ -45,28 +46,25 @@ namespace MirageSDK.Core.Implementation
 
 		public Task<string> CallMethod(string methodName, object[] arguments = null, string gas = null)
 		{
-			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
-			var contract = _web3Provider.Eth.GetContract(_contractABI, _contractAddress);
-			var callFunction = contract.GetFunction(methodName);
-			var transactionInput = callFunction.CreateTransactionInput(activeSessionAccount, arguments);
-
+			var transactionInput = CreateTransactionInput(methodName, arguments);
 			return SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 		}
 		
-		public EventController Web3SendMethod(string methodName, object[] arguments = null, string gas = null)
+		public EventController Web3SendMethod(string methodName, object[] arguments, EventController evController = null, string gas = null)
 		{
-			var evController = new EventController();
+			if (evController != null)
+			{
+				evController = new EventController();
+			}
+
+			var transactionInput = CreateTransactionInput(methodName, arguments);
 		
-			TransactionInput raw = _web3Provider.Eth.GetContract(_contractABI, _contractAddress)
-				.GetFunction(methodName)
-				.CreateTransactionInput(WalletConnect.ActiveSession.Accounts[0], arguments);
-		
-			evController.InvokeSendingEvent(raw);
+			evController.InvokeSendingEvent(transactionInput);
 				
-			Task<string> sendTransactionTask = SendTransaction(_contractAddress, raw.Data, gas: gas);
+			Task<string> sendTransactionTask = SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 			
-			evController.InvokeSentEvent(raw);
-						
+			evController.InvokeSentEvent(transactionInput);
+									
 			sendTransactionTask.ContinueWith(task =>
 			{
 				if (!task.IsFaulted)
@@ -99,6 +97,14 @@ namespace MirageSDK.Core.Implementation
 					evController.SetError(task.Exception);
 				}
 			});
+		}
+		
+		public TransactionInput CreateTransactionInput(string methodName, object[] arguments)
+		{
+			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
+			var contract = _web3Provider.Eth.GetContract(_contractABI, _contractAddress);
+			var callFunction = contract.GetFunction(methodName);
+			return callFunction.CreateTransactionInput(activeSessionAccount, arguments);
 		}
 
 		public Task<TransactionReceipt> GetTransactionReceipt(string transactionHash)
