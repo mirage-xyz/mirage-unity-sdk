@@ -2,7 +2,7 @@ using System.Numerics;
 using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
-using MirageSDK.Examples.Scripts.ContractMessages;
+using MirageSDK.Examples.Scripts.ContractMessages.ERC721;
 using MirageSDK.Examples.Scripts.ContractMessages.GameCharacterContract;
 using TMPro;
 using UnityEngine;
@@ -43,7 +43,7 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 			await MintItems();
 			await MintCharacter();
 			await GameItemSetApproval();
-			await GetTokenId();
+			await GetCharacterTokenId();
 			await ChangeHat(BlueHatAddress);
 			await GetHat();
 			await ChangeHat(RedHatAddress);
@@ -98,23 +98,38 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 			UpdateUILogs($"Game Items approved. Hash : {transactionHash}");
 		}
 
-		private async UniTask<BigInteger> GetBalance()
+		private async UniTask<BigInteger> GetBalanceERC721(IContract contract)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
 			var balanceOfMessage = new BalanceOfMessage
 			{
 				Owner = activeSessionAccount
 			};
-			var balance = await _gameCharacterContract.GetData<BalanceOfMessage, BigInteger>(balanceOfMessage);
+			var balance = await contract.GetData<BalanceOfMessage, BigInteger>(balanceOfMessage);
 
-			UpdateUILogs($"Number of Character NFTs Owned: {balance}");
+			UpdateUILogs($"Number of NFTs Owned: {balance}");
 			return balance;
 		}
 
-		private async UniTask<BigInteger> GetTokenId()
+		private async UniTask<BigInteger> GetBalanceERC1155(IContract contract, string id)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
-			var tokenBalance = await GetBalance();
+			var balanceOfMessage = new ContractMessages.ERC1155.BalanceOfMessage
+			{
+				Account = activeSessionAccount,
+				Id = id
+			};
+			var balance =
+				await contract.GetData<ContractMessages.ERC1155.BalanceOfMessage, BigInteger>(balanceOfMessage);
+
+			UpdateUILogs($"Number of NFTs Owned: {balance}");
+			return balance;
+		}
+
+		private async UniTask<BigInteger> GetCharacterTokenId()
+		{
+			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
+			var tokenBalance = await GetBalanceERC721(_gameCharacterContract);
 
 			if (tokenBalance > 0)
 			{
@@ -134,21 +149,46 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 			return -1;
 		}
 
+		private async UniTask<bool> GetHasHatToken(string tokenAddress)
+		{
+			var tokenBalance = await GetBalanceERC1155(_gameItemContract, tokenAddress);
+
+			if (tokenBalance > 0)
+			{
+				UpdateUILogs("You have " + tokenBalance + " hats");
+				return true;
+			}
+
+			UpdateUILogs("You dont have any Hat Item");
+			return false;
+		}
+
 		private async UniTask ChangeHat(string hatAddress)
 		{
 			const string changeHatMethodName = "changeHat";
+			var characterId = await GetCharacterTokenId();
 
-			var transactionHash = await _gameCharacterContract.CallMethod(changeHatMethodName, new object[]
+			var hasHat = await GetHasHatToken(hatAddress);
+
+			if (!hasHat || characterId.Equals(-1))
 			{
-				hatAddress
-			}, TransactionGasLimit);
+				UpdateUILogs("ERROR : CharacterID or HatID is null");
+			}
+			else
+			{
+				var transactionHash = await _gameCharacterContract.CallMethod(changeHatMethodName, new object[]
+				{
+					characterId,
+					BlueHatAddress
+				}, TransactionGasLimit);
 
-			UpdateUILogs($"Hat Changed. Hash : {transactionHash}");
+				UpdateUILogs($"Hat Changed. Hash : {transactionHash}");
+			}
 		}
 
 		private async UniTask<BigInteger> GetHat()
 		{
-			var characterID = await GetTokenId();
+			var characterID = await GetCharacterTokenId();
 			var getHatMessage = new GetHatMessage
 			{
 				CharacterId = characterID.ToString()
@@ -165,8 +205,8 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 			_text.text += "\n" + log;
 			Debug.Log(log);
 		}
-		
-	#region Button Calls
+
+		#region Button Calls
 
 		public async void MintItemsCall()
 		{
@@ -180,7 +220,7 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 
 		public async void GetBalanceCall()
 		{
-			await GetBalance();
+			await GetBalanceERC721(_gameCharacterContract);
 		}
 
 		public async void GameItemSetApprovalCall()
@@ -190,7 +230,7 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 
 		public async void GetTokenIdCall()
 		{
-			await GetTokenId();
+			await GetCharacterTokenId();
 		}
 
 		public async void ChangeRedHatCall()
@@ -208,7 +248,6 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 			await GetHat();
 		}
 
-	#endregion
-	
+		#endregion
 	}
 }
