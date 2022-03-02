@@ -2,13 +2,15 @@ using System.Numerics;
 using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
-using MirageSDK.Examples.Scripts.ContractMessages.ERC721;
+using MirageSDK.Core.Utils;
+using MirageSDK.Examples.Scripts.ContractMessages.ERC1155;
 using MirageSDK.Examples.Scripts.ContractMessages.GameCharacterContract;
+using MirageSDK.Examples.Scripts.WearableNFTExample;
 using TMPro;
 using UnityEngine;
 using WalletConnectSharp.Unity;
 
-namespace MirageSDK.Examples.Scripts.WearableNFTExample
+namespace MirageSDK.Examples.WearableNFTExample
 {
 	/// <summary>
 	///     You need to have a minter role for this example to work.
@@ -87,25 +89,17 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 		//Cant be called by the operator
 		private async UniTask GameItemSetApproval()
 		{
-			const string setApprovalMethodName = "setApprovalForAll";
-
-			var transactionHash = await _gameItemContract.CallMethod(setApprovalMethodName, new object[]
-			{
+			var transactionHash = await ContractFunctions.SetApprovalForAll(
 				WearableNFTContractInformation.GameCharacterContractAddress,
-				true
-			});
+				true, _gameItemContract);
 
 			UpdateUILogs($"Game Items approved. Hash : {transactionHash}");
 		}
 
-		private async UniTask<BigInteger> GetBalanceERC721(IContract contract)
+		private async UniTask<BigInteger> GetCharacterBalance()
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
-			var balanceOfMessage = new BalanceOfMessage
-			{
-				Owner = activeSessionAccount
-			};
-			var balance = await contract.GetData<BalanceOfMessage, BigInteger>(balanceOfMessage);
+			var balance = await ContractFunctions.BalanceOf(activeSessionAccount, _gameCharacterContract);
 
 			UpdateUILogs($"Number of NFTs Owned: {balance}");
 			return balance;
@@ -114,13 +108,13 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 		private async UniTask<BigInteger> GetBalanceERC1155(IContract contract, string id)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
-			var balanceOfMessage = new ContractMessages.ERC1155.BalanceOfMessage
+			var balanceOfMessage = new BalanceOfMessage
 			{
 				Account = activeSessionAccount,
 				Id = id
 			};
 			var balance =
-				await contract.GetData<ContractMessages.ERC1155.BalanceOfMessage, BigInteger>(balanceOfMessage);
+				await contract.GetData<BalanceOfMessage, BigInteger>(balanceOfMessage);
 
 			UpdateUILogs($"Number of NFTs Owned: {balance}");
 			return balance;
@@ -129,17 +123,13 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 		private async UniTask<BigInteger> GetCharacterTokenId()
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
-			var tokenBalance = await GetBalanceERC721(_gameCharacterContract);
+			var tokenBalance = await GetCharacterBalance();
 
 			if (tokenBalance > 0)
 			{
-				var tokenOfOwnerByIndexMessage = new TokenOfOwnerByIndexMessage
-				{
-					Owner = activeSessionAccount, Index = 0
-				};
 				var tokenId =
-					await _gameCharacterContract.GetData<TokenOfOwnerByIndexMessage, BigInteger>(
-						tokenOfOwnerByIndexMessage);
+					await ContractFunctions.TokenOfOwnerByIndex(activeSessionAccount, 0, _gameCharacterContract);
+
 				UpdateUILogs($"GameCharacter tokenId  : {tokenId}");
 
 				return tokenId;
@@ -220,7 +210,7 @@ namespace MirageSDK.Examples.Scripts.WearableNFTExample
 
 		public async void GetBalanceCall()
 		{
-			await GetBalanceERC721(_gameCharacterContract);
+			await GetCharacterBalance();
 		}
 
 		public async void GameItemSetApprovalCall()
