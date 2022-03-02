@@ -1,5 +1,5 @@
 using System;
-using WalletConnectSharp.Core.Events;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
 
 namespace WalletConnectSharp.Core.Network
 {

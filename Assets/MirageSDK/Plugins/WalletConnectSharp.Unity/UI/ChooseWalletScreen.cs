@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using Plugins.WalletConnectSharp.Unity;
+using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 using MirageSDK.Scripts.Example;
@@ -11,24 +11,24 @@ using System.Linq;
 
 namespace WalletConnectSharp.Unity.UI
 {
-    public class ChooseWalletScreen : MonoBehaviour
-    {
-        public WalletConnect WalletConnect;
-        public GameObject buttonPrefab;
-        public Transform buttonGridTransform;
-        public Text loadingText;
+	public class ChooseWalletScreen : MonoBehaviour
+	{
+		public WalletConnect WalletConnect;
+		public GameObject buttonPrefab;
+		public Transform buttonGridTransform;
+		public Text loadingText;
 
-        [SerializeField]
-        public WalletSelectItem[] wallets;
+		[SerializeField]
+		public WalletSelectItem[] wallets;
 
-        private void Start()
-        {
-            BuildWalletButtons().Forget();
-        }
+		private void Start()
+		{
+			BuildWalletButtons().Forget();
+		}
 
-        private async UniTask BuildWalletButtons()
-        {
-#if UNITY_IOS
+		private async UniTask BuildWalletButtons()
+		{
+		#if UNITY_IOS
             // Set wallet filter to those wallets selected by the developer.
             var walletFilter = from w in wallets
                                                where w.Selected
@@ -48,33 +48,30 @@ namespace WalletConnectSharp.Unity.UI
             {
                 Debug.Log("No wallets selected for filter.");
             }
-#endif
-            
-            await WalletConnect.FetchWalletList();
+		#endif
 
-            foreach (var walletId in WalletConnect.SupportedWallets.Keys)
-            {
-                var walletData = WalletConnect.SupportedWallets[walletId];
+			var supportedWallets = await WalletConnect.FetchWalletList();
 
-                var walletObj = Instantiate(buttonPrefab, buttonGridTransform);
+			foreach (var walletId in supportedWallets.Keys)
+			{
+				var walletData = supportedWallets[walletId];
 
-                var walletImage = walletObj.GetComponent<Image>();
-                var walletButton = walletObj.GetComponent<Button>();
+				var walletObj = Instantiate(buttonPrefab, buttonGridTransform);
 
-                walletImage.sprite = walletData.medimumIcon;
-                
-                walletButton.onClick.AddListener(delegate
-                {
-                    WalletConnect.OpenDeepLink(walletData);
-                });
-            }
-            
-            Destroy(loadingText.gameObject);
-        }
+				var walletImage = walletObj.GetComponent<Image>();
+				var walletButton = walletObj.GetComponent<Button>();
 
-        public static List<WalletSelectItem> GetWalletNameList()
-        {
-            return SupportedWalletList.SupportedWalletNames();
-        }
-    }
+				walletImage.sprite = walletData.medimumIcon;
+
+				walletButton.onClick.AddListener(delegate { WalletConnect.OpenDeepLink(walletData); });
+			}
+
+			Destroy(loadingText.gameObject);
+		}
+
+		public static List<WalletSelectItem> GetWalletNameList()
+		{
+			return SupportedWalletList.SupportedWalletNames();
+		}
+	}
 }

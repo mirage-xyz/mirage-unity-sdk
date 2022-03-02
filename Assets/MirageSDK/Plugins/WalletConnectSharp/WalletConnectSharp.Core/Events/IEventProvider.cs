@@ -1,4 +1,4 @@
-namespace WalletConnectSharp.Core.Events
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events
 {
     public interface IEventProvider
     {

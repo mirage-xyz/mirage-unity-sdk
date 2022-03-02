@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http.Headers;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core;
 using Nethereum.JsonRpc.Client;
 using WalletConnectSharp.Core;
 using WalletConnectSharp.NEthereum.Client;

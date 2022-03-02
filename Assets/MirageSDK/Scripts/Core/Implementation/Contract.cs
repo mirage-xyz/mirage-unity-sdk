@@ -51,7 +51,7 @@ namespace MirageSDK.Core.Implementation
 		
 		public EventController Web3SendMethod(string methodName, object[] arguments, EventController evController = null, string gas = null)
 		{
-			if (evController != null)
+			if (evController == null)
 			{
 				evController = new EventController();
 			}
@@ -60,7 +60,7 @@ namespace MirageSDK.Core.Implementation
 		
 			evController.InvokeSendingEvent(transactionInput);
 				
-			Task<string> sendTransactionTask = SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
+			var sendTransactionTask = SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 			
 			evController.InvokeSentEvent(transactionInput);
 									

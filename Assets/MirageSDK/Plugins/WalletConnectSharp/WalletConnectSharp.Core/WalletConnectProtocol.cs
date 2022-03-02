@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
 using Newtonsoft.Json;
 using UnityEngine;
-using WalletConnectSharp.Core.Events;
 using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Core.Network;
 
-namespace WalletConnectSharp.Core
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core
 {
 	public class WalletConnectProtocol : IDisposable
 	{
@@ -28,10 +27,10 @@ namespace WalletConnectSharp.Core
 		public readonly EventDelegator Events;
 
 		protected string Version = "1";
-		protected string _bridgeUrl;
-		protected string _key;
-		protected byte[] _keyRaw;
-		protected List<string> _activeTopics = new List<string>();
+		protected string BridgeUrl;
+		protected string Key;
+		protected byte[] KeyRaw;
+		protected readonly List<string> ActiveTopics = new List<string>();
 
 		public event EventHandler<WalletConnectProtocol> OnTransportConnect;
 		public event EventHandler<WalletConnectProtocol> OnTransportDisconnect;
@@ -45,7 +44,7 @@ namespace WalletConnectSharp.Core
 
 		public bool Connecting { get; protected set; }
 
-		public bool TransportConnected => Transport?.Connected == true && Transport?.URL == _bridgeUrl;
+		public bool TransportConnected => Transport?.Connected == true && Transport?.URL == BridgeUrl;
 
 		public ITransport Transport { get; private set; }
 
@@ -54,8 +53,6 @@ namespace WalletConnectSharp.Core
 		public ClientMeta DappMetadata { get; set; }
 
 		public ClientMeta WalletMetadata { get; set; }
-
-		public ReadOnlyCollection<string> ActiveTopics => _activeTopics.AsReadOnly();
 
 		public string PeerId { get; protected set; }
 
@@ -89,17 +86,17 @@ namespace WalletConnectSharp.Core
 
 			transport = transport ?? TransportFactory.Instance.BuildDefaultTransport(eventDelegator);
 
-			_bridgeUrl = savedSession.BridgeURL;
+			BridgeUrl = savedSession.BridgeURL;
 			Transport = transport;
 
 			cipher = cipher ?? new AESCipher();
 
 			Cipher = cipher;
 
-			_keyRaw = savedSession.KeyRaw;
+			KeyRaw = savedSession.KeyRaw;
 
 			//Convert hex 
-			_key = savedSession.Key;
+			Key = savedSession.Key;
 
 			PeerId = savedSession.PeerID;
 
@@ -145,7 +142,7 @@ namespace WalletConnectSharp.Core
 			Transport.OpenReceived += OnTransportOpenReceived;
 			Transport.Closed += OnTransportClosed;
 
-			await Transport.Open(_bridgeUrl);
+			await Transport.Open(BridgeUrl);
 
 			Debug.Log("[WalletConnect] Transport Opened");
 
@@ -192,9 +189,9 @@ namespace WalletConnectSharp.Core
 
 		public void ListenToTopic(string topic)
 		{
-			if (!_activeTopics.Contains(topic))
+			if (!ActiveTopics.Contains(topic))
 			{
-				_activeTopics.Add(topic);
+				ActiveTopics.Add(topic);
 			}
 		}
 
@@ -202,14 +199,14 @@ namespace WalletConnectSharp.Core
 		{
 			var networkMessage = e.Message;
 
-			if (!_activeTopics.Contains(networkMessage.Topic))
+			if (!ActiveTopics.Contains(networkMessage.Topic))
 			{
 				return;
 			}
 
 			var encryptedPayload = JsonConvert.DeserializeObject<EncryptedPayload>(networkMessage.Payload);
 
-			var json = await Cipher.DecryptWithKey(_keyRaw, encryptedPayload);
+			var json = await Cipher.DecryptWithKey(KeyRaw, encryptedPayload);
 
 			var response = JsonConvert.DeserializeObject<JsonRpcResponse>(json);
 
@@ -249,16 +246,16 @@ namespace WalletConnectSharp.Core
 				silent = false;
 			}
 
-			string json = JsonConvert.SerializeObject(requestObject);
+			var json = JsonConvert.SerializeObject(requestObject);
 
-			var encrypted = await Cipher.EncryptWithKey(_keyRaw, json);
+			var encrypted = await Cipher.EncryptWithKey(KeyRaw, json);
 
 			if (sendingTopic == null)
 			{
 				sendingTopic = PeerId;
 			}
 
-			var message = new NetworkMessage()
+			var message = new NetworkMessage
 			{
 				Payload = JsonConvert.SerializeObject(encrypted),
 				Silent = silent,
@@ -271,11 +268,13 @@ namespace WalletConnectSharp.Core
 
 		public void Dispose()
 		{
-			if (Transport != null)
+			if (Transport == null)
 			{
-				Transport.Dispose();
-				Transport = null;
+				return;
 			}
+
+			Transport.Dispose();
+			Transport = null;
 		}
 
 		public virtual async Task Disconnect()

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
@@ -33,6 +34,8 @@ namespace WalletConnectSharp.Unity
 		///     displayed to the user.
 		/// </summary>
 		public List<string> AllowedWalletIds;
+
+		public AppEntry SelectedWallet { get; set; }
 
 		public Wallets DefaultWallet;
 		
@@ -166,11 +169,7 @@ namespace WalletConnectSharp.Unity
 					}
 					else if (!Session.Connected && !Session.Connecting)
 					{
-						SetupDefaultWallet().Forget();
-
-						SetupEvents();
-
-						return await CompleteConnect(cancellationToken);
+						return await CompleteConnect();
 					}
 					else
 					{
@@ -199,36 +198,33 @@ namespace WalletConnectSharp.Unity
 			InitializeUnitySession(savedSession);
 		#endif
 
-			SetupDefaultWallet().Forget();
-
-			SetupEvents();
-
-			return await CompleteConnect(cancellationToken);
+			return await CompleteConnect();
 		}
 
 		public static SavedSession GetSavedSession()
 		{
-			if (IsSessionSaved())
+			if (!IsSessionSaved())
 			{
-				var json = PlayerPrefs.GetString(SessionKey);
-				return JsonConvert.DeserializeObject<SavedSession>(json);
+				return null;
 			}
 
-			return null;
+			var json = PlayerPrefs.GetString(SessionKey);
+			return JsonConvert.DeserializeObject<SavedSession>(json);
 		}
 
 		public void InitializeUnitySession(SavedSession savedSession = null, ICipher cipher = null)
 		{
 			Session = savedSession != null
-				? new WalletConnectUnitySession(savedSession, this, _transport)
-				: new WalletConnectUnitySession(AppData, this, customBridgeUrl, _transport, cipher, chainId);
+				? WalletConnectUnitySession.RestoreWalletConnectSession(savedSession, this, _transport)
+				: WalletConnectUnitySession.GetNewWalletConnectSession(AppData, this, customBridgeUrl, _transport,
+					cipher, chainId);
 		}
 
 		private void SetupEvents()
 		{
 		#if UNITY_EDITOR || DEBUG
 			//Useful for debug logging
-			Session.OnSessionConnect += (sender, session) => { Debug.Log("[WalletConnect] Session Connected"); };
+			Session.OnSessionConnect += OnSessionOnOnSessionConnect;
 		#endif
 
 			Session.OnSessionDisconnect += SessionOnOnSessionDisconnect;
@@ -242,7 +238,12 @@ namespace WalletConnectSharp.Unity
 		#endif
 		}
 
-		private void SessionOnSendEvent(object sender, WalletConnectSession e)
+		private void OnSessionOnOnSessionConnect(object sender, WalletConnectSession session)
+		{
+			Debug.Log("[WalletConnect] Session Connected");
+		}
+
+		private void OnSessionOnOnSend(object sender, WalletConnectSession session)
 		{
 			OpenMobileWallet();
 		}
@@ -252,6 +253,14 @@ namespace WalletConnectSharp.Unity
 			Session.OnSessionDisconnect -= SessionOnOnSessionDisconnect;
 			Session.OnSessionCreated -= SessionOnOnSessionCreated;
 			Session.OnSessionResumed -= SessionOnOnSessionResumed;
+		#if UNITY_ANDROID || UNITY_IOS
+			//Whenever we send a request to the Wallet, we want to open the Wallet app
+			Session.OnSend -= OnSessionOnOnSend;
+		#endif
+		#if UNITY_EDITOR || DEBUG
+			//Useful for debug logging
+			Session.OnSessionConnect -= OnSessionOnOnSessionConnect;
+		#endif
 		}
 
 		private void SessionOnOnSessionResumed(object sender, WalletConnectSession e)
@@ -269,18 +278,20 @@ namespace WalletConnectSharp.Unity
 			Debug.Log("Has Created SessionKey and saved it in PlayerPrefs :" + PlayerPrefs.HasKey(SessionKey));
 		}
 
-		private async Task<WCSessionData> CompleteConnect(CancellationToken cancellationToken)
+		private async Task<WCSessionData> CompleteConnect()
 		{
+			SetupDefaultWallet().Forget();
+			SetupEvents();
 			Debug.Log("Waiting for Wallet connection");
 
 			ConnectionStarted?.Invoke(this, EventArgs.Empty);
 
 			var allEvents = new WalletConnectEventWithSessionData();
 
-			allEvents.AddListener(delegate(WCSessionData arg0)
+			allEvents.AddListener(delegate(WCSessionData sessionData)
 			{
 				ConnectedEvent.Invoke();
-				ConnectedEventSession.Invoke(arg0);
+				ConnectedEventSession.Invoke(sessionData);
 			});
 
 			var tries = 0;
@@ -332,29 +343,27 @@ namespace WalletConnectSharp.Unity
 
 		private async UniTask SetupDefaultWallet()
 		{
-			await FetchWalletList(false);
+			var supportedWallets = await FetchWalletList(false);
 
 			var wallet =
-				SupportedWallets.Values.FirstOrDefault(a =>
-					string.Equals(a.name, DefaultWallet.ToString(), StringComparison.CurrentCultureIgnoreCase));
+				supportedWallets.Values.FirstOrDefault(a =>
+					string.Equals(a.name, DefaultWallet.ToString(), StringComparison.InvariantCultureIgnoreCase));
 
 			if (wallet != null)
 			{
-				await DownloadImagesFor(wallet.id);
+				await DownloadImagesFor(wallet);
 				SelectedWallet = wallet;
 				Debug.Log("Setup default wallet " + wallet.name);
 			}
 		}
 
-		private IEnumerator DownloadImagesFor(string id, string[] sizes = null)
+		private static IEnumerator DownloadImagesFor(AppEntry wallet, string[] sizes = null)
 		{
 			sizes = sizes ?? new[] {"sm", "md", "lg"};
 
-			var data = SupportedWallets[id];
-
 			foreach (var size in sizes)
 			{
-				var url = "https://registry.walletconnect.org/logo/" + size + "/" + id + ".jpeg";
+				var url = "https://registry.walletconnect.org/logo/" + size + "/" + wallet.id + ".jpeg";
 
 				using (var imageRequest = UnityWebRequestTexture.GetTexture(url))
 				{
@@ -374,13 +383,13 @@ namespace WalletConnectSharp.Unity
 						switch (size)
 						{
 							case "sm":
-								data.smallIcon = sprite;
+								wallet.smallIcon = sprite;
 								break;
 							case "md":
-								data.medimumIcon = sprite;
+								wallet.medimumIcon = sprite;
 								break;
 							case "lg":
-								data.largeIcon = sprite;
+								wallet.largeIcon = sprite;
 								break;
 						}
 					}
@@ -389,7 +398,7 @@ namespace WalletConnectSharp.Unity
 		}
 
 		//Todo return supported wallets here
-		public async UniTask FetchWalletList(bool downloadImages = true)
+		public async UniTask<Dictionary<string, AppEntry>> FetchWalletList(bool downloadImages = true)
 		{
 			using (var webRequest =
 			       UnityWebRequest.Get("https://registry.walletconnect.org/data/wallets.json"))
@@ -400,21 +409,22 @@ namespace WalletConnectSharp.Unity
 				if (webRequest.isHttpError || webRequest.isNetworkError)
 				{
 					Debug.Log("Error Getting Wallet Info: " + webRequest.error);
+					return null;
 				}
-				else
+
+				var json = webRequest.downloadHandler.text;
+
+				var supportedWallets = JsonConvert.DeserializeObject<Dictionary<string, AppEntry>>(json);
+
+				if (downloadImages)
 				{
-					var json = webRequest.downloadHandler.text;
-
-					SupportedWallets = JsonConvert.DeserializeObject<Dictionary<string, AppEntry>>(json);
-
-					if (downloadImages)
+					foreach (var wallet in supportedWallets.Values)
 					{
-						foreach (var id in SupportedWallets.Keys)
-						{
-							await DownloadImagesFor(id);
-						}
+						await DownloadImagesFor(wallet);
 					}
 				}
+
+				return supportedWallets;
 			}
 		}
 

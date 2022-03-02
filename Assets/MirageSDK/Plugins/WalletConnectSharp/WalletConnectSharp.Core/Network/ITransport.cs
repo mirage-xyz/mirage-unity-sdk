@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using WalletConnectSharp.Core.Events.Request;
-using WalletConnectSharp.Core.Events.Response;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events.Model;
 using WalletConnectSharp.Core.Models;
 
 namespace WalletConnectSharp.Core.Network

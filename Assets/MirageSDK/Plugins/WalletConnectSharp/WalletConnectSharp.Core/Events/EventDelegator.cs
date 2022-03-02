@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events.Model;
 using Newtonsoft.Json;
-using WalletConnectSharp.Core.Events.Request;
-using WalletConnectSharp.Core.Events.Response;
 using WalletConnectSharp.Core.Models;
 
-namespace WalletConnectSharp.Core.Events
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events
 {
 	public class EventDelegator : IDisposable
 	{

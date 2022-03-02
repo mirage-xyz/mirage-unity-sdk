@@ -1,6 +1,6 @@
 using WalletConnectSharp.Core.Models;
 
-namespace WalletConnectSharp.Core.Events.Response
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events.Model
 {
     public class JsonRpcRequestEvent<T> : GenericEvent<T> where T : JsonRpcRequest
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace WalletConnectSharp.Core.Events
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events.Model
 {
     public class GenericEvent<T> : IEvent<T>
     {

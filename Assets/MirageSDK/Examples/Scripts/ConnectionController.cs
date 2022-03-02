@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -62,7 +63,6 @@ namespace MirageSDK.Examples.Scripts
 			WalletConnect.ActiveSession.OnTransportConnect -= UpdateLoginButtonState;
 			WalletConnect.ActiveSession.OnTransportDisconnect -= UpdateLoginButtonState;
 			WalletConnect.ActiveSession.OnTransportOpen -= UpdateLoginButtonState;
-			WalletConnect.ActiveSession.OnTransportConnect -= UpdateLoginButtonState;
 		}
 
 		private void UpdateLoginButtonState(object sender, WalletConnectProtocol e)

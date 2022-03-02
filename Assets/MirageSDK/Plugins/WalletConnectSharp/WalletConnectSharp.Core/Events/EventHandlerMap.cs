@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 
-namespace WalletConnectSharp.Core.Events
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events
 {
     public class EventHandlerMap<TEventArgs>
     {
-        private Dictionary<string, EventHandler<TEventArgs>> mapping =
+        private readonly Dictionary<string, EventHandler<TEventArgs>> _mapping =
             new Dictionary<string, EventHandler<TEventArgs>>();
 
-        private EventHandler<TEventArgs> BeforeEventExecuted;
+        private readonly EventHandler<TEventArgs> _beforeEventExecuted;
 
         public EventHandlerMap(EventHandler<TEventArgs> callbackBeforeExecuted)
         {
@@ -17,7 +17,7 @@ namespace WalletConnectSharp.Core.Events
                 callbackBeforeExecuted = CallbackBeforeExecuted;
             }
 
-            this.BeforeEventExecuted = callbackBeforeExecuted;
+            _beforeEventExecuted = callbackBeforeExecuted;
         }
 
         private void CallbackBeforeExecuted(object sender, TEventArgs e)
@@ -28,27 +28,27 @@ namespace WalletConnectSharp.Core.Events
         {
             get
             {
-                if (!mapping.ContainsKey(topic))
+                if (!_mapping.ContainsKey(topic))
                 {
-                    mapping.Add(topic, BeforeEventExecuted);
+                    _mapping.Add(topic, _beforeEventExecuted);
                 }
                 
-                return mapping[topic];
+                return _mapping[topic];
             }
             set
             {
-                if (mapping.ContainsKey(topic))
+                if (_mapping.ContainsKey(topic))
                 {
-                    mapping.Remove(topic);
+                    _mapping.Remove(topic);
                 }
                 
-                mapping.Add(topic, value);
+                _mapping.Add(topic, value);
             }
         }
 
         public bool Contains(string topic)
         {
-            return mapping.ContainsKey(topic);
+            return _mapping.ContainsKey(topic);
         }
     }
 }

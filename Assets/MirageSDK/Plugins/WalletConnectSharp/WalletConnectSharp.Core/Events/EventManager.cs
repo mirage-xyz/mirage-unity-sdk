@@ -1,53 +1,45 @@
-using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace WalletConnectSharp.Core.Events
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events
 {
-    public class EventManager<T, TEventArgs> : IEventProvider where TEventArgs : IEvent<T>, new()
-    {
-        private static EventManager<T, TEventArgs> _instance;
+	public class EventManager<T, TEventArgs> : IEventProvider where TEventArgs : IEvent<T>, new()
+	{
+		private static EventManager<T, TEventArgs> _instance;
 
-        public EventHandlerMap<TEventArgs> EventTriggers;
+		public readonly EventHandlerMap<TEventArgs> EventTriggers;
 
-        public static EventManager<T, TEventArgs> Instance
-        {
-            get 
-            {
-                if (_instance == null)
-                {
-                    _instance = new EventManager<T, TEventArgs>();
-                }
-                
-                return _instance; 
-            }
-        }
+		public static EventManager<T, TEventArgs> Instance =>
+			_instance ?? (_instance = new EventManager<T, TEventArgs>());
 
-        private EventManager()
-        {
-            EventTriggers = new EventHandlerMap<TEventArgs>(CallbackBeforeExecuted);
-            
-            EventFactory.Instance.Register<T>(this);
-        }
-        
-        private void CallbackBeforeExecuted(object sender, TEventArgs e)
-        {
-        }
+		private EventManager()
+		{
+			EventTriggers = new EventHandlerMap<TEventArgs>(CallbackBeforeExecuted);
 
-        public void PropagateEvent(string topic, string responseJson)
-        {
-            if (EventTriggers.Contains(topic))
-            {
-                var eventTrigger = EventTriggers[topic];
+			EventFactory.Instance.Register<T>(this);
+		}
 
-                if (eventTrigger != null)
-                {
-                    var response = JsonConvert.DeserializeObject<T>(responseJson);
-                    var eventArgs = new TEventArgs();
-                    eventArgs.SetData(response);
-                    eventTrigger(this, eventArgs);
-                }
-            }
-        }
-    }
+		private void CallbackBeforeExecuted(object sender, TEventArgs e)
+		{
+		}
+
+		public void PropagateEvent(string topic, string responseJson)
+		{
+			if (!EventTriggers.Contains(topic))
+			{
+				return;
+			}
+
+			var eventTrigger = EventTriggers[topic];
+
+			if (eventTrigger == null)
+			{
+				return;
+			}
+
+			var response = JsonConvert.DeserializeObject<T>(responseJson);
+			var eventArgs = new TEventArgs();
+			eventArgs.SetData(response);
+			eventTrigger(this, eventArgs);
+		}
+	}
 }

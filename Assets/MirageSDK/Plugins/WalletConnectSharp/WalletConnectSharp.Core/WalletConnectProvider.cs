@@ -1,7 +1,8 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
-using WalletConnectSharp.Core.Events;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
 using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Core.Network;
 using WalletConnectSharp.Core.Utils;
@@ -95,11 +96,11 @@ namespace WalletConnectSharp.Core
                 switch (name.ToLower())
                 {
                     case "bridge":
-                        base._bridgeUrl = WebUtility.UrlDecode(value);
+                        base.BridgeUrl = WebUtility.UrlDecode(value);
                         break;
                     case "key":
-                        base._key = WebUtility.UrlDecode(value);
-                        base._keyRaw = base._key.FromHex();
+                        base.Key = WebUtility.UrlDecode(value);
+                        base.KeyRaw = base.Key.FromHex();
                         break;
                 }
             }

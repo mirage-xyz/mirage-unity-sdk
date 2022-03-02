@@ -6,22 +6,23 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events.Model;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
 using Newtonsoft.Json;
 using UnityEngine;
-using WalletConnectSharp.Core.Events;
-using WalletConnectSharp.Core.Events.Request;
 using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Core.Models.Ethereum;
 using WalletConnectSharp.Core.Network;
 using WalletConnectSharp.Core.Utils;
 
-namespace WalletConnectSharp.Core
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core
 {
 	public class WalletConnectSession : WalletConnectProtocol
 	{
-		private string _handshakeTopic;
-
-		private long _handshakeId;
+		private const string ConnectTopic = "connect";
+		private const string DisconnectTopic = "disconnect";
+		private const string SessionFailedTopic = "session_failed";
 
 		public event EventHandler<WalletConnectSession> OnSessionConnect;
 		public event EventHandler<WalletConnectSession> OnSessionCreated;
@@ -40,7 +41,11 @@ namespace WalletConnectSharp.Core
 
 		public int ChainId { get; private set; }
 
-		private string clientId = "";
+		private string _clientId = "";
+
+		private string _handshakeTopic;
+
+		private long _handshakeId;
 
 		public string URI
 		{
@@ -48,8 +53,8 @@ namespace WalletConnectSharp.Core
 			{
 				var topicEncode = WebUtility.UrlEncode(_handshakeTopic);
 				var versionEncode = WebUtility.UrlEncode(Version);
-				var bridgeUrlEncode = WebUtility.UrlEncode(_bridgeUrl);
-				var keyEncoded = WebUtility.UrlEncode(_key);
+				var bridgeUrlEncode = WebUtility.UrlEncode(BridgeUrl);
+				var keyEncoded = WebUtility.UrlEncode(Key);
 
 				return "wc:" + topicEncode + "@" + versionEncode + "?bridge=" + bridgeUrlEncode + "&key=" + keyEncoded;
 			}
@@ -58,19 +63,20 @@ namespace WalletConnectSharp.Core
 		public WalletConnectSession(SavedSession savedSession, ITransport transport = null, ICipher cipher = null,
 			EventDelegator eventDelegator = null) : base(savedSession, transport, cipher, eventDelegator)
 		{
-			this.DappMetadata = savedSession.DappMeta;
-			this.WalletMetadata = savedSession.WalletMeta;
-			this.ChainId = savedSession.ChainID;
+			DappMetadata = savedSession.DappMeta;
+			WalletMetadata = savedSession.WalletMeta;
+			ChainId = savedSession.ChainID;
 
-			clientId = savedSession.ClientID;
+			_clientId = savedSession.ClientID;
 
-			this.Accounts = savedSession.Accounts;
+			Accounts = savedSession.Accounts;
 
-			this.NetworkId = savedSession.NetworkID;
+			NetworkId = savedSession.NetworkID;
 
-			this._handshakeId = savedSession.HandshakeID;
+			_handshakeId = savedSession.HandshakeID;
+			SubscribeForSessionResponse();
 
-			this.SessionConnected = true;
+			SessionConnected = true;
 		}
 
 		public WalletConnectSession(ClientMeta clientMeta, string bridgeUrl = null, ITransport transport = null,
@@ -119,11 +125,11 @@ namespace WalletConnectSharp.Core
 				bridgeUrl = bridgeUrl.Replace("http", "ws");
 			}
 
-			this.DappMetadata = clientMeta;
-			this.ChainId = chainId;
-			this._bridgeUrl = bridgeUrl;
+			DappMetadata = clientMeta;
+			ChainId = chainId;
+			BridgeUrl = bridgeUrl;
 
-			this.SessionConnected = false;
+			SessionConnected = false;
 
 			CreateNewSession();
 		}
@@ -136,13 +142,13 @@ namespace WalletConnectSharp.Core
 					"You cannot create a new session after connecting the session. Create a new WalletConnectSession object to create a new session");
 			}
 
-			this._bridgeUrl = DefaultBridge.GetBridgeUrl(this._bridgeUrl);
+			BridgeUrl = DefaultBridge.GetBridgeUrl(BridgeUrl);
 
 			var topicGuid = Guid.NewGuid();
 
 			_handshakeTopic = topicGuid.ToString();
 
-			clientId = Guid.NewGuid().ToString();
+			_clientId = Guid.NewGuid().ToString();
 
 			GenerateKey();
 
@@ -168,10 +174,10 @@ namespace WalletConnectSharp.Core
 			var rngCsp = new RNGCryptoServiceProvider();
 			rngCsp.GetBytes(secret);
 
-			this._keyRaw = secret;
+			KeyRaw = secret;
 
 			//Convert hex 
-			this._key = this._keyRaw.ToHex().ToLower();
+			Key = KeyRaw.ToHex().ToLower();
 		}
 
 		public virtual async Task<WCSessionData> ConnectSession()
@@ -181,25 +187,15 @@ namespace WalletConnectSharp.Core
 			Connecting = true;
 			try
 			{
-				if (SessionConnected)
+				if (!TransportConnected)
 				{
-					//Listen for the _handshakeId response
-					//The response will be of type WCSessionRequestResponse
-					//We do this now before subscribing
-					//This is in case we need to respond to a session disconnect and this is a
-					//resume session
-					Events.ListenForResponse<WCSessionRequestResponse>(this._handshakeId, HandleSessionResponse);
-				}
-
-				if (!base.TransportConnected)
-				{
-					await base.SetupTransport();
+					await SetupTransport();
 				}
 
 				ReadyForUserPrompt = false;
-				await SubscribeAndListenToTopic(this.clientId);
+				await SubscribeAndListenToTopic(_clientId);
 
-				ListenToTopic(this._handshakeTopic);
+				ListenToTopic(_handshakeTopic);
 
 				WCSessionData result;
 				if (!SessionConnected)
@@ -213,7 +209,7 @@ namespace WalletConnectSharp.Core
 				}
 				else
 				{
-					result = new WCSessionData()
+					result = new WCSessionData
 					{
 						accounts = Accounts,
 						approved = true,
@@ -226,7 +222,6 @@ namespace WalletConnectSharp.Core
 
 					OnSessionResumed?.Invoke(this, this);
 				}
-
 
 				OnSessionConnect?.Invoke(this, this);
 
@@ -264,12 +259,11 @@ namespace WalletConnectSharp.Core
 			await ConnectSession();
 		}
 
-		public async Task DisconnectSession(string disconnectMessage = "Session Disconnected",
-			bool createNewSession = true)
+		public async Task DisconnectSession(string disconnectMessage = "Session Disconnected")
 		{
 			EnsureNotDisconnected();
 
-			var request = new WCSessionUpdate(new WCSessionData()
+			var request = new WCSessionUpdate(new WCSessionData
 			{
 				approved = false,
 				chainId = 0,
@@ -281,7 +275,7 @@ namespace WalletConnectSharp.Core
 
 			await base.Disconnect();
 
-			HandleSessionDisconnect(disconnectMessage, "disconnect", createNewSession);
+			HandleSessionDisconnect(disconnectMessage);
 		}
 
 		public override async Task Disconnect()
@@ -383,7 +377,6 @@ namespace WalletConnectSharp.Core
 			return response.Result;
 		}
 
-
 		public async Task<string> EthSendRawTransaction(string data, Encoding messageEncoding = null)
 		{
 			EnsureNotDisconnected();
@@ -406,13 +399,15 @@ namespace WalletConnectSharp.Core
 			return response.Result;
 		}
 
-		public async Task<R> Send<T, R>(T data) where T : JsonRpcRequest where R : JsonRpcResponse
+		public async Task<TResponse> Send<TRequest, TResponse>(TRequest data)
+			where TRequest : JsonRpcRequest
+			where TResponse : JsonRpcResponse
 		{
 			EnsureNotDisconnected();
 
-			var eventCompleted = new TaskCompletionSource<R>(TaskCreationOptions.None);
+			var eventCompleted = new TaskCompletionSource<TResponse>(TaskCreationOptions.None);
 
-			Events.ListenForResponse<R>(data.ID, (sender, @event) =>
+			void HandleResponse(object sender, JsonRpcResponseEvent<TResponse> @event)
 			{
 				var response = @event.Response;
 				if (response.IsError)
@@ -423,7 +418,9 @@ namespace WalletConnectSharp.Core
 				{
 					eventCompleted.TrySetResult(@event.Response);
 				}
-			});
+			}
+
+			Events.ListenForResponse<TResponse>(data.ID, HandleResponse);
 
 			await SendRequest(data);
 
@@ -440,78 +437,87 @@ namespace WalletConnectSharp.Core
 		{
 			EnsureNotDisconnected();
 
-			var data = new WcSessionRequest(DappMetadata, clientId, ChainId);
+			var data = new WcSessionRequest(DappMetadata, _clientId, ChainId);
 
-			this._handshakeId = data.ID;
+			_handshakeId = data.ID;
+			SubscribeForSessionResponse();
 
-			//Debug.Log("[WalletConnect] Sending Session to topic " + _handshakeTopic);
-
-			await SendRequest(data, this._handshakeTopic);
+			await SendRequest(data, _handshakeTopic);
 
 			SessionUsed = true;
 
-			var eventCompleted =
-				new TaskCompletionSource<WCSessionData>(TaskCreationOptions.None);
+			var sessionCompletionSource = new TaskCompletionSource<WCSessionData>(TaskCreationOptions.None);
 
-			//Listen for the _handshakeId response
-			//The response will be of type WCSessionRequestResponse
-			Events.ListenForResponse<WCSessionRequestResponse>(this._handshakeId, HandleSessionResponse);
 
-			//Listen for wc_sessionUpdate requests
-			Events.ListenFor("wc_sessionUpdate",
-				(object sender, GenericEvent<WCSessionUpdate> @event) => HandleSessionUpdate(@event.Response.parameters[0]));
+			SubscribeOnConnectMessage(sessionCompletionSource);
 
-			//Listen for the "connect" event triggered by 'HandleSessionResponse' above
-			//This will have the type WCSessionData
-			Events.ListenFor<WCSessionData>("connect",
-				(sender, @event) =>
-				{
-					eventCompleted.TrySetResult(@event.Response);
-				});
-
-			//Listen for the "session_failed" event triggered by 'HandleSessionResponse' above
-			//This will have the type failure reason
-			Events.ListenFor<ErrorResponse>("session_failed",
-				delegate(object sender, GenericEvent<ErrorResponse> @event)
-				{
-					if (@event.Response.Message == "Not Approved" || @event.Response.Message == "Session Rejected")
-					{
-						eventCompleted.TrySetCanceled();
-					}
-					else
-					{
-						eventCompleted.TrySetException(
-							new IOException("WalletConnect: Session Failed: " + @event.Response.Message));
-					}
-				});
+			SubscribeOnFailedMessage(sessionCompletionSource);
 
 			ReadyForUserPrompt = true;
 
 			Debug.Log("[WalletConnect] Session Ready for Wallet");
 
-			var response = await eventCompleted.Task;
+			var response = await sessionCompletionSource.Task;
 
 			ReadyForUserPrompt = false;
 
 			return response;
 		}
 
-		private void HandleSessionResponse(object sender, JsonRpcResponseEvent<WCSessionRequestResponse> jsonresponse)
+		private void SubscribeOnFailedMessage(TaskCompletionSource<WCSessionData> sessionCompletionSource)
 		{
-			var response = jsonresponse.Response.result;
+			Events.ListenFor(SessionFailedTopic,
+				(object sender, GenericEvent<ErrorResponse> @event) =>
+				{
+					if (@event.Response.Message == "Not Approved" || @event.Response.Message == "Session Rejected")
+					{
+						sessionCompletionSource.TrySetCanceled();
+					}
+					else
+					{
+						sessionCompletionSource.TrySetException(
+							new IOException("WalletConnect: Session Failed: " + @event.Response.Message));
+					}
+				});
+		}
 
-			if (response?.approved == true)
+		private void SubscribeOnConnectMessage(TaskCompletionSource<WCSessionData> eventCompleted)
+		{
+			void HandleConnectMessage(object _, GenericEvent<WCSessionData> @event)
 			{
-				HandleSessionUpdate(response);
+				eventCompleted.TrySetResult(@event.Response);
 			}
-			else if (jsonresponse.Response.IsError)
+
+			Events.ListenFor<WCSessionData>(ConnectTopic, HandleConnectMessage);
+		}
+
+		private void SubscribeForSessionUpdates()
+		{
+			Events.ListenFor(WCSessionUpdate.SessionUpdateMethod,
+				(object _, GenericEvent<WCSessionUpdate> @event) =>
+					HandleSessionUpdate(@event.Response.parameters[0]));
+		}
+
+		private void SubscribeForSessionResponse()
+		{
+			void HandleSessionResponse(object sender, JsonRpcResponseEvent<WCSessionRequestResponse> jsonresponse)
 			{
-				HandleSessionDisconnect(jsonresponse.Response.Error.Message, "session_failed");
+				var response = jsonresponse.Response.result;
+
+				if (response?.approved == true)
+				{
+					HandleSessionUpdate(response);
+				}
+				else
+				{
+					HandleSessionDisconnect(
+						jsonresponse.Response.IsError ? jsonresponse.Response.Error.Message : "Not Approved",
+						SessionFailedTopic);
+				}
 			}
-			else
-			{
-				HandleSessionDisconnect("Not Approved", "session_failed");
-			}
+
+			SubscribeForSessionUpdates();
+			Events.ListenForResponse<WCSessionRequestResponse>(_handshakeId, HandleSessionResponse);
 		}
 
 		private void HandleSessionUpdate(WCSessionData data)
@@ -538,27 +544,25 @@ namespace WalletConnectSharp.Core
 
 			Accounts = data.accounts;
 
-			if (!wasConnected)
+			switch (wasConnected)
 			{
-				PeerId = data.peerId;
-
-				WalletMetadata = data.peerMeta;
-
-				Events.Trigger("connect", data);
-			}
-			else if (wasConnected && !SessionConnected)
-			{
-				HandleSessionDisconnect("Wallet Disconnected");
-			}
-			else
-			{
-				Events.Trigger("session_update", data);
+				case false:
+					PeerId = data.peerId;
+					WalletMetadata = data.peerMeta;
+					Events.Trigger(ConnectTopic, data);
+					break;
+				case true when !SessionConnected:
+					HandleSessionDisconnect("Wallet Disconnected");
+					break;
+				default:
+					Events.Trigger("session_update", data);
+					break;
 			}
 
 			SessionUpdate?.Invoke(this, data);
 		}
 
-		private void HandleSessionDisconnect(string msg, string topic = "disconnect", bool createNewSession = true)
+		private void HandleSessionDisconnect(string msg, string topic = DisconnectTopic)
 		{
 			SessionConnected = false;
 			Disconnected = true;
@@ -570,13 +574,12 @@ namespace WalletConnectSharp.Core
 				DisconnectTransport();
 			}
 
-			_activeTopics.Clear();
+			ActiveTopics.Clear();
 
 			Events.Clear();
 
 			OnSessionDisconnect?.Invoke(this, EventArgs.Empty);
 		}
-
 
 		/// <summary>
 		/// Creates and returns a serializable class that holds all session data required to resume later
@@ -589,7 +592,7 @@ namespace WalletConnectSharp.Core
 				return null;
 			}
 
-			return new SavedSession(clientId, _handshakeId, _bridgeUrl, _key, _keyRaw, PeerId, NetworkId, Accounts,
+			return new SavedSession(_clientId, _handshakeId, BridgeUrl, Key, KeyRaw, PeerId, NetworkId, Accounts,
 				ChainId, DappMetadata, WalletMetadata);
 		}
 
