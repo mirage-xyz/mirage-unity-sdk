@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
@@ -17,6 +16,10 @@ using WalletConnectSharp.Core.Network;
 using WalletConnectSharp.Unity.Models;
 using WalletConnectSharp.Unity.Network;
 using WalletConnectSharp.Unity.Utils;
+
+#if UNITY_IOS
+using System.Net;
+#endif
 
 namespace WalletConnectSharp.Unity
 {
