@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MirageSDK.Scripts.Example;
+using MirageSDK.Plugins.WalletConnectSharp.Unity.Models.DeepLink;
 using Newtonsoft.Json;
 using WalletConnectSharp.Unity.Models;
 

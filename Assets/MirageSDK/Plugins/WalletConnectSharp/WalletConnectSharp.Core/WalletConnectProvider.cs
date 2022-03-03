@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core;
 using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Core.Network;
 using WalletConnectSharp.Core.Utils;

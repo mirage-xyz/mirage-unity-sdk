@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
 using Newtonsoft.Json;
 using UnityEngine;
 using WalletConnectSharp.Core.Models;

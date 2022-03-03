@@ -1,15 +1,10 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using MirageSDK.Plugins.WalletConnectSharp.Unity;
+using MirageSDK.Plugins.WalletConnectSharp.Unity.Utils;
 using UnityEngine;
 using UnityEngine.UI;
-using MirageSDK.Scripts.Example;
 
-#if UNITY_IOS
-using System.Linq;
-#endif
-
-namespace WalletConnectSharp.Unity.UI
+namespace MirageSDK.Plugins.WalletConnectSharp.Unity.UI
 {
 	public class ChooseWalletScreen : MonoBehaviour
 	{
@@ -28,29 +23,7 @@ namespace WalletConnectSharp.Unity.UI
 
 		private async UniTask BuildWalletButtons()
 		{
-		#if UNITY_IOS
-            // Set wallet filter to those wallets selected by the developer.
-            var walletFilter = from w in wallets
-                                               where w.Selected
-                                               select w.Id;
-            // For iOS Set wallet filter to speed up wallet button display.
-            var filterList = walletFilter.ToList();
-            if (filterList.Any())
-            {
-                WalletConnect.AllowedWalletIds = filterList.ToList();
-
-                foreach (var i in WalletConnect.AllowedWalletIds)
-                {
-                    Debug.Log($"Filter for {i}");
-                }
-            }
-            else
-            {
-                Debug.Log("No wallets selected for filter.");
-            }
-		#endif
-
-			var supportedWallets = await WalletConnect.FetchWalletList();
+			var supportedWallets = await WalletDownloadHelper.FetchWalletList();
 
 			foreach (var walletId in supportedWallets.Keys)
 			{
@@ -61,7 +34,7 @@ namespace WalletConnectSharp.Unity.UI
 				var walletImage = walletObj.GetComponent<Image>();
 				var walletButton = walletObj.GetComponent<Button>();
 
-				walletImage.sprite = walletData.medimumIcon;
+				walletImage.sprite = walletData.MediumIcon;
 
 				walletButton.onClick.AddListener(delegate { WalletConnect.OpenDeepLink(walletData); });
 			}

@@ -1,3 +1,4 @@
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
 using Newtonsoft.Json;
 
 namespace WalletConnectSharp.Core.Models

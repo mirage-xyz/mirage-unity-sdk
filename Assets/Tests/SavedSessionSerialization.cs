@@ -1,4 +1,7 @@
 using System;
+using MirageSDK.Plugins.WalletConnectSharp.Unity;
+using MirageSDK.Plugins.WalletConnectSharp.Unity.Utils;
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
 using NUnit.Framework;
 using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Unity;
@@ -10,41 +13,41 @@ namespace Tests
 		[Test]
 		public void SavedSession_ClearSession()
 		{
-			if (!WalletConnect.IsSessionSaved())
+			if (!SessionSaveHandler.IsSessionSaved())
 			{
 				return;
 			}
 
-			var savedSession = WalletConnect.GetSavedSession();
-			WalletConnect.ClearSession();
-			var savedSessionAfterClear = WalletConnect.GetSavedSession();
+			var savedSession = SessionSaveHandler.GetSavedSession();
+			SessionSaveHandler.ClearSession();
+			var savedSessionAfterClear = SessionSaveHandler.GetSavedSession();
 			Assert.IsNull(savedSessionAfterClear);
-			WalletConnect.SaveSession(savedSession);
+			SessionSaveHandler.SaveSession(savedSession);
 		}
 
 		[Test]
 		public void SavedSession_SaveSession()
 		{
 			SavedSession savedSessionBeforeTest = null;
-			if (WalletConnect.IsSessionSaved())
+			if (SessionSaveHandler.IsSessionSaved())
 			{
-				savedSessionBeforeTest = WalletConnect.GetSavedSession();
+				savedSessionBeforeTest = SessionSaveHandler.GetSavedSession();
 			}
 
 			var testSession = GetTestSession();
 
-			WalletConnect.SaveSession(testSession);
-			Assert.That(WalletConnect.IsSessionSaved, "Session was not saved at all");
-			var sessionAfterSave = WalletConnect.GetSavedSession();
+			SessionSaveHandler.SaveSession(testSession);
+			Assert.That(SessionSaveHandler.IsSessionSaved, "Session was not saved at all");
+			var sessionAfterSave = SessionSaveHandler.GetSavedSession();
 			Assert.That(sessionAfterSave.Equals(testSession));
 
 			if (savedSessionBeforeTest != null)
 			{
-				WalletConnect.SaveSession(savedSessionBeforeTest);
+				SessionSaveHandler.SaveSession(savedSessionBeforeTest);
 			}
 			else
 			{
-				WalletConnect.ClearSession();
+				SessionSaveHandler.ClearSession();
 			}
 		}
 
@@ -102,10 +105,10 @@ namespace Tests
 		{
 			var clientMeta = new ClientMeta
 			{
-				Description = string.Empty,
-				Icons = new[] { string.Empty },
-				Name = string.Empty,
-				URL = string.Empty
+				_description = string.Empty,
+				_icons = new[] { string.Empty },
+				_name = string.Empty,
+				_url = string.Empty
 			};
 			var testSession = new SavedSession(
 				string.Empty,

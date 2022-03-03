@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using UnityEngine;
 using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Core.Models.Ethereum;
@@ -43,13 +44,17 @@ public class WalletConnectActions : MonoBehaviour
         await WalletConnect.ActiveSession.Disconnect();
         
         //Warn the user, maybe this isn't what they wanted to do
-        if (WalletConnect.Instance.createNewSessionOnSessionDisconnect && waitForNewSession)
+        if (WalletConnect.Instance.CreateNewSessionOnSessionDisconnect && waitForNewSession)
         {
             //Only try connecting if we are not already connecting or if we are not already connected
             if (!WalletConnect.ActiveSession.Connecting && !WalletConnect.ActiveSession.Connected)
+            {
                 await WalletConnect.ActiveSession.Connect();
+            }
         } 
         else if (waitForNewSession)
+        {
             await WalletConnect.ActiveSession.Connect();
+        }
     }
 }

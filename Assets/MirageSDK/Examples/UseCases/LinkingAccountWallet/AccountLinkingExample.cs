@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // This example is to demonstrate how to bind the wallet into user account. 
-namespace MirageSDK.UseCases.LinkingAccountWallet
+namespace MirageSDK.Examples.UseCases.LinkingAccountWallet
 {
 	public class AccountLinkingExample : MonoBehaviour
 	{

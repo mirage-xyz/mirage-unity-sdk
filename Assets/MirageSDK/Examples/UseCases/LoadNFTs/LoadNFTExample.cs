@@ -2,13 +2,12 @@ using System.Numerics;
 using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
-using MirageSDK.Examples.Scripts.ContractMessages;
-using MirageSDK.Examples.Scripts.ContractMessages.ERC721;
-using MirageSDK.Examples.Scripts.ContractMessages.GameCharacterContract;
-using MirageSDK.Examples.Scripts.WearableNFTExample;
+using MirageSDK.Examples.ContractMessages.ERC721;
+using MirageSDK.Examples.ContractMessages.GameCharacterContract;
+using MirageSDK.Examples.WearableNFTExample;
+using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using TMPro;
 using UnityEngine;
-using WalletConnectSharp.Unity;
 
 namespace MirageSDK.UseCases.LoadNFTs
 {

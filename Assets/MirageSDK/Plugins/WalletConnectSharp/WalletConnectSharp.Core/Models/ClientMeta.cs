@@ -2,27 +2,29 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace WalletConnectSharp.Core.Models
+namespace MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models
 {
 	[Serializable]
 	public class ClientMeta
 	{
-		[JsonProperty("description")] public string Description;
+		[JsonProperty("description")] public string _description = "Wallet";
 
-		[JsonProperty("url")] public string URL;
+		[JsonProperty("url")] public string _url = "https://www.ankr.com/";
 
-		[JsonProperty("icons")] public string[] Icons;
+		[JsonProperty("icons")] public string[] _icons = {
+			"https://www.ankr.com/static/favicon/apple-touch-icon.png"
+		};
 
-		[JsonProperty("name")] public string Name;
+		[JsonProperty("name")] public string _name = "Wallet";
 
 		public override bool Equals(object obj)
 		{
 			if (obj is ClientMeta clientMeta)
 			{
-				return Description == clientMeta.Description
-				       && URL == clientMeta.URL
-				       && Icons.SequenceEqual(clientMeta.Icons)
-				       && Name == clientMeta.Name;
+				return _description == clientMeta._description
+				       && _url == clientMeta._url
+				       && _icons.SequenceEqual(clientMeta._icons)
+				       && _name == clientMeta._name;
 			}
 
 			return base.Equals(obj);

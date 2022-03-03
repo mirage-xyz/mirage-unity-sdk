@@ -1,3 +1,5 @@
+using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
+
 namespace WalletConnectSharp.Core.Models
 {
     public class WCSessionData
