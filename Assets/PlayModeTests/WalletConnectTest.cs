@@ -1,12 +1,11 @@
 using System;
 using System.Collections;
 using Cysharp.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
 using MirageSDK.Plugins.WalletConnectSharp.Unity;
-using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Models;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-using WalletConnectSharp.Core.Models;
 using WalletConnectSharp.Unity;
 using WalletConnectSharp.Unity.Network;
 using Object = UnityEngine.Object;

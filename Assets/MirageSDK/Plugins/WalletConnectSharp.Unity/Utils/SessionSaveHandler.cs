@@ -1,6 +1,6 @@
+using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
 using Newtonsoft.Json;
 using UnityEngine;
-using WalletConnectSharp.Core.Models;
 
 namespace MirageSDK.Plugins.WalletConnectSharp.Unity.Utils
 {

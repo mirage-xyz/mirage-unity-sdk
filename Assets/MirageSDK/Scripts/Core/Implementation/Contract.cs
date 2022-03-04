@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 using MirageSDK.Core.Data;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Models.Ethereum;
 using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.RPC.Eth.Transactions;
 using Nethereum.Web3;
-using WalletConnectSharp.Core.Models.Ethereum;
 using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation

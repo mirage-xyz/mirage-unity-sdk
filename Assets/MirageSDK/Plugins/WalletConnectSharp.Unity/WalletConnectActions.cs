@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Models.Ethereum;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Models.Ethereum.Types;
 using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using UnityEngine;
-using WalletConnectSharp.Core.Models;
-using WalletConnectSharp.Core.Models.Ethereum;
 using WalletConnectSharp.Unity;
 
 public class WalletConnectActions : MonoBehaviour

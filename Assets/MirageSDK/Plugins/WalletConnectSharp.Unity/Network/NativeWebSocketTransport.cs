@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events;
-using MirageSDK.Plugins.WalletConnectSharp.WalletConnectSharp.Core.Events.Model;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Events;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Events.Model;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
+using MirageSDK.Plugins.WalletConnectSharp.Core.Network;
 using NativeWebSocket;
 using Newtonsoft.Json;
 using UnityEngine;
-using WalletConnectSharp.Core.Models;
-using WalletConnectSharp.Core.Network;
 
 namespace WalletConnectSharp.Unity.Network
 {
