@@ -10,7 +10,6 @@ using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.RPC.Eth.Transactions;
 using Nethereum.Web3;
-using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation
 {
@@ -44,13 +43,15 @@ namespace MirageSDK.Core.Implementation
 			return eventHandler.GetAllChangesAsync(filters);
 		}
 
-		public Task<string> CallMethod(string methodName, object[] arguments = null, string gas = null)
+		public Task<string> CallMethod(string methodName, object[] arguments = null, string gas = null,
+			string gasPrice = null, string nonce = null)
 		{
 			var transactionInput = CreateTransactionInput(methodName, arguments);
 			return SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 		}
-		
-		public EventController Web3SendMethod(string methodName, object[] arguments, EventController evController = null, string gas = null)
+
+		public EventController Web3SendMethod(string methodName, object[] arguments,
+			EventController evController = null, string gas = null, string gasPrice = null, string nonce = null)
 		{
 			if (evController == null)
 			{
@@ -58,13 +59,13 @@ namespace MirageSDK.Core.Implementation
 			}
 
 			var transactionInput = CreateTransactionInput(methodName, arguments);
-		
+
 			evController.InvokeSendingEvent(transactionInput);
-				
+
 			var sendTransactionTask = SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
-			
+
 			evController.InvokeSentEvent(transactionInput);
-									
+
 			sendTransactionTask.ContinueWith(task =>
 			{
 				if (!task.IsFaulted)
@@ -81,9 +82,9 @@ namespace MirageSDK.Core.Implementation
 
 			return evController;
 		}
-	
+
 		private void LoadReceipt(string transactionHash, EventController evController)
-		{		
+		{
 			var getReceiptTask = GetTransactionReceipt(transactionHash);
 			getReceiptTask.ContinueWith(task =>
 			{
@@ -98,7 +99,7 @@ namespace MirageSDK.Core.Implementation
 				}
 			});
 		}
-		
+
 		public TransactionInput CreateTransactionInput(string methodName, object[] arguments)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
@@ -122,30 +123,23 @@ namespace MirageSDK.Core.Implementation
 			string to,
 			string data = null,
 			string value = null,
-			string gas = null)
+			string gas = null,
+			string gasPrice = null,
+			string nonce = null
+		)
 		{
 			var address = WalletConnect.ActiveSession.Accounts[0];
 
 			var transactionData = new TransactionData
 			{
 				from = address,
-				to = to
+				to = to,
+				data = data,
+				value = value != null ? MirageSDKHelpers.StringToBigInteger(value) : null,
+				gas = gas != null ? MirageSDKHelpers.StringToBigInteger(gas) : null,
+				gasPrice = gasPrice != null ? MirageSDKHelpers.StringToBigInteger(gasPrice) : null,
+				nonce = nonce
 			};
-
-			if (data != null)
-			{
-				transactionData.data = data;
-			}
-
-			if (value != null)
-			{
-				transactionData.value = MirageSDKHelpers.StringToBigInteger(value);
-			}
-
-			if (gas != null)
-			{
-				transactionData.gas = MirageSDKHelpers.StringToBigInteger(gas);
-			}
 
 			return transactionData.SendTransaction();
 		}

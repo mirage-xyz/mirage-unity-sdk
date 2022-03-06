@@ -38,7 +38,7 @@ namespace MirageSDK.Examples.UseCases.LinkingAccountWallet
 
 		// A backend server to verify the ownership of this address using message and signature signed by 3rd party wallet
 		// an example can be found at https://github.com/mirage-xyz/mirage-go-demo/blob/main/main.go#L96
-		private const string URL = "http://2.56.91.78:8080/account/verification/address";
+		private const string URL = "http://root@eth-01.dccn.ankr.com:8080/account/verification/address";
 
 		private void Start()
 		{
