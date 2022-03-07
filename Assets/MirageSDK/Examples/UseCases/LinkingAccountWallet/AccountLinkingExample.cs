@@ -51,7 +51,7 @@ namespace MirageSDK.Examples.UseCases.LinkingAccountWallet
 		// step 3: server return binded address 
 		public async void Sign()
 		{
-			_signature = await _mirageSDKWrapper.Sign(_message);
+			_signature = await _mirageSDKWrapper.Eth().Sign(_message);
 			Debug.Log($"Signature: {_signature}");
 
 			var address = await SendSignature(_signature);

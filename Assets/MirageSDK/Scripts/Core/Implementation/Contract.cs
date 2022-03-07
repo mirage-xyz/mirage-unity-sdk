@@ -3,13 +3,12 @@ using System.Threading.Tasks;
 using MirageSDK.Core.Data;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
-using MirageSDK.Plugins.WalletConnectSharp.Core.Models.Ethereum;
 using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
-using Nethereum.RPC.Eth.Transactions;
 using Nethereum.Web3;
+using UnityEngine;
 
 namespace MirageSDK.Core.Implementation
 {
@@ -18,10 +17,12 @@ namespace MirageSDK.Core.Implementation
 		private readonly string _contractABI;
 		private readonly string _contractAddress;
 		private readonly IWeb3 _web3Provider;
+		private readonly IEth _eth;
 
-		internal Contract(IWeb3 web3Provider, string contractAddress, string contractABI)
+		internal Contract(IWeb3 web3Provider, Eth eth, string contractAddress, string contractABI)
 		{
 			_web3Provider = web3Provider;
+			_eth = eth;
 			_contractABI = contractABI;
 			_contractAddress = contractAddress;
 		}
@@ -47,7 +48,7 @@ namespace MirageSDK.Core.Implementation
 			string gasPrice = null, string nonce = null)
 		{
 			var transactionInput = CreateTransactionInput(methodName, arguments);
-			return SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
+			return _eth.SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 		}
 
 		public EventController Web3SendMethod(string methodName, object[] arguments,
@@ -62,7 +63,7 @@ namespace MirageSDK.Core.Implementation
 
 			evController.InvokeSendingEvent(transactionInput);
 
-			var sendTransactionTask = SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
+			var sendTransactionTask = _eth.SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 
 			evController.InvokeSentEvent(transactionInput);
 
@@ -85,7 +86,7 @@ namespace MirageSDK.Core.Implementation
 
 		private void LoadReceipt(string transactionHash, EventController evController)
 		{
-			var getReceiptTask = GetTransactionReceipt(transactionHash);
+			var getReceiptTask = _eth.GetTransactionReceipt(transactionHash);
 			getReceiptTask.ContinueWith(task =>
 			{
 				if (!task.IsFaulted)
@@ -106,42 +107,6 @@ namespace MirageSDK.Core.Implementation
 			var contract = _web3Provider.Eth.GetContract(_contractABI, _contractAddress);
 			var callFunction = contract.GetFunction(methodName);
 			return callFunction.CreateTransactionInput(activeSessionAccount, arguments);
-		}
-
-		public Task<TransactionReceipt> GetTransactionReceipt(string transactionHash)
-		{
-			return _web3Provider.TransactionManager.TransactionReceiptService.PollForReceiptAsync(transactionHash);
-		}
-
-		public Task<Transaction> GetTransactionInfo(string transactionReceipt)
-		{
-			var src = new EthGetTransactionByHash(_web3Provider.Client);
-			return src.SendRequestAsync(transactionReceipt);
-		}
-
-		public Task<string> SendTransaction(
-			string to,
-			string data = null,
-			string value = null,
-			string gas = null,
-			string gasPrice = null,
-			string nonce = null
-		)
-		{
-			var address = WalletConnect.ActiveSession.Accounts[0];
-
-			var transactionData = new TransactionData
-			{
-				from = address,
-				to = to,
-				data = data,
-				value = value != null ? MirageSDKHelpers.StringToBigInteger(value) : null,
-				gas = gas != null ? MirageSDKHelpers.StringToBigInteger(gas) : null,
-				gasPrice = gasPrice != null ? MirageSDKHelpers.StringToBigInteger(gasPrice) : null,
-				nonce = nonce
-			};
-
-			return transactionData.SendTransaction();
 		}
 	}
 }

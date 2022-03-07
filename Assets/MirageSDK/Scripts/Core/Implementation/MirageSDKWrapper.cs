@@ -6,7 +6,6 @@ using MirageSDK.Plugins.WalletConnectSharp.Unity;
 using Nethereum.Signer;
 using Nethereum.Web3;
 using WalletConnectSharp.NEthereum;
-using WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Implementation
 {
@@ -14,6 +13,7 @@ namespace MirageSDK.Core.Implementation
 	{
 		private readonly string _providerURI;
 		private readonly Dictionary<string, Web3> _web3Providers = new Dictionary<string, Web3>();
+		private readonly Eth _eth;
 
 		private MirageSDKWrapper()
 		{
@@ -22,6 +22,9 @@ namespace MirageSDK.Core.Implementation
 		private MirageSDKWrapper(string providerURI)
 		{
 			_providerURI = providerURI;
+			
+			var web3Provider = GetOrCreateWeb3Provider(_providerURI);
+			_eth = new Eth(web3Provider);
 		}
 
 		/// <summary>
@@ -63,6 +66,11 @@ namespace MirageSDK.Core.Implementation
 			var web3Provider = GetOrCreateWeb3Provider(_providerURI);
 			return GetContract(web3Provider, contractAddress, contractABI);
 		}
+
+		public Eth Eth()
+		{
+			return _eth;
+		}
 		
 		public IContract GetContract(string providerURI, string contractAddress, string contractABI)
 		{
@@ -84,30 +92,7 @@ namespace MirageSDK.Core.Implementation
 		/// <returns>Initialized contract handler</returns>
 		public IContract GetContract(IWeb3 web3, string contractAddress, string contractABI)
 		{
-			return new Contract(web3, contractAddress, contractABI);
-		}
-
-		/// <summary>
-		/// Sign a message using  currently active session.
-		/// </summary>
-		/// <param name="messageToSign">Message you would like to sign</param>
-		/// <returns>Signed message</returns>
-		public Task<string> Sign(string messageToSign)
-		{
-			return WalletConnect.ActiveSession.EthSign(WalletConnect.ActiveSession.Accounts[0], messageToSign);
-		}
-
-		/// <summary>
-		/// Checks if message was signed with provided <paramref name="signature"/>
-		/// For more info look into Netherium.Signer implementation.
-		/// </summary>
-		/// <param name="messageToCheck"></param>
-		/// <param name="signature"></param>
-		/// <returns>Messages public address.</returns>
-		public string CheckSignature(string messageToCheck, string signature)
-		{
-			var signer = new EthereumMessageSigner();
-			return signer.EncodeUTF8AndEcRecover(messageToCheck, signature);
+			return new Contract(web3, _eth, contractAddress, contractABI);
 		}
 
 		private Web3 GetOrCreateWeb3Provider(string providerURI)

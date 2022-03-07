@@ -14,13 +14,14 @@ namespace MirageSDK.Examples.ERC20Example
 	public class ERC20Example : MonoBehaviour
 	{
 		private const string MintMethodName = "mint";
+		private IMirageSDK _mirageSdk;
 		private IContract _erc20Contract;
 
 		private void Start()
 		{
-			var mirageSDKWrapper = MirageSDKWrapper.GetSDKInstance(ERC20ContractInformation.ProviderURL);
+			_mirageSdk = MirageSDKWrapper.GetSDKInstance(ERC20ContractInformation.ProviderURL);
 			_erc20Contract =
-				mirageSDKWrapper.GetContract(
+				_mirageSdk.GetContract(
 					ERC20ContractInformation.ContractAddress,
 					ERC20ContractInformation.ABI);
 		}
@@ -30,7 +31,7 @@ namespace MirageSDK.Examples.ERC20Example
 			var receipt = await _erc20Contract.CallMethod(MintMethodName, Array.Empty<object>());
 			Debug.Log($"Receipt: {receipt}");
 
-			var trx = await _erc20Contract.GetTransactionInfo(receipt);
+			var trx = await _mirageSdk.Eth().GetTransaction(receipt);
 
 			Debug.Log($"Nonce: {trx.Nonce}");
 		}

@@ -17,13 +17,13 @@ namespace MirageSDK.Examples.SignatureExample
 
 		public async void Sign()
 		{
-			_signature = await _mirageSDKWrapper.Sign(Message);
+			_signature = await _mirageSDKWrapper.Eth().Sign(Message);
 			Debug.Log($"Signature: {_signature}");
 		}
 	
 		public void CheckSignature()
 		{
-			var address = _mirageSDKWrapper.CheckSignature(Message, _signature);
+			var address = _mirageSDKWrapper.Eth().CheckSignature(Message, _signature);
 			Debug.Log($"Address from signature: {address}");
 		}
 	}

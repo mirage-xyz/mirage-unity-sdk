@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MirageSDK.Core.Data;
-using MirageSDK.Core.Implementation;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
-using Nethereum.RPC.Eth.DTOs;
 
 namespace MirageSDK.Core.Infrastructure
 {
@@ -15,17 +13,6 @@ namespace MirageSDK.Core.Infrastructure
 
 		EventController Web3SendMethod(string methodName, object[] arguments, EventController evController = null,
 			string gas = null, string gasPrice = null, string nonce = null);
-
-		Task<Transaction> GetTransactionInfo(string transactionReceipt);
-
-		Task<string> SendTransaction(
-			string to,
-			string data = null,
-			string value = null,
-			string gas = null,
-			string gasPrice = null,
-			string nonce = null
-		);
 
 		Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter = null)
 			where TEvDto : IEventDTO, new();

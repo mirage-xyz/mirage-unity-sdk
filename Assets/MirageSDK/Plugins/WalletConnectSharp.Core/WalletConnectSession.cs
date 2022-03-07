@@ -358,11 +358,8 @@ namespace MirageSDK.Plugins.WalletConnectSharp.Core
 		public async Task<string> EthSendTransaction(params TransactionData[] transaction)
 		{
 			EnsureNotDisconnected();
-
 			var request = new EthSendTransaction(transaction);
-
 			var response = await Send<EthSendTransaction, EthResponse>(request);
-
 			return response.Result;
 		}
 
