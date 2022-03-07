@@ -8,7 +8,6 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
-using UnityEngine;
 
 namespace MirageSDK.Core.Implementation
 {
@@ -17,12 +16,12 @@ namespace MirageSDK.Core.Implementation
 		private readonly string _contractABI;
 		private readonly string _contractAddress;
 		private readonly IWeb3 _web3Provider;
-		private readonly IEth _eth;
+		private readonly ICommonProvider _eth;
 
-		internal Contract(IWeb3 web3Provider, Eth eth, string contractAddress, string contractABI)
+		internal Contract(IWeb3 web3Provider, string contractAddress, string contractABI)
 		{
 			_web3Provider = web3Provider;
-			_eth = eth;
+			_eth = new CommonProvider(_web3Provider);
 			_contractABI = contractABI;
 			_contractAddress = contractAddress;
 		}

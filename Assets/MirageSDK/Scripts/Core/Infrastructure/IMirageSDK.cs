@@ -4,6 +4,6 @@ namespace MirageSDK.Core.Infrastructure
 {
 	public interface IMirageSDK : IContractProvider
 	{
-		Eth Eth();
+		ICommonProvider Eth();
 	}
 }

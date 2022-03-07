@@ -1,14 +1,9 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using MirageSDK.Core.Data;
-using MirageSDK.Core.Implementation;
-using Nethereum.ABI.FunctionEncoding.Attributes;
-using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
 
 namespace MirageSDK.Core.Infrastructure
 {
-	public interface IEth : ISignatureProvider
+	public interface ITransactionProvider : ISignatureProvider
 	{
 		Task<string> SendTransaction(
 			string to,
