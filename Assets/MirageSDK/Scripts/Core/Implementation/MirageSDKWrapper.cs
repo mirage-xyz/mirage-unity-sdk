@@ -1,8 +1,8 @@
 using System;
 using MirageSDK.Core.Infrastructure;
+using MirageSDK.WalletConnectSharp.NEthereum;
 using MirageSDK.WalletConnectSharp.Unity;
 using Nethereum.Web3;
-using WalletConnectSharp.NEthereum;
 
 namespace MirageSDK.Core.Implementation
 {

@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using MirageSDK.Plugins.WalletConnectSharp.Core.Models.Ethereum;
+using MirageSDK.WalletConnectSharp.Core.Models.Ethereum;
 using MirageSDK.WalletConnectSharp.Unity;
 
 namespace MirageSDK.Core.Utils

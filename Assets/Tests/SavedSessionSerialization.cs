@@ -1,5 +1,5 @@
 using System;
-using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
+using MirageSDK.WalletConnectSharp.Core.Models;
 using MirageSDK.WalletConnectSharp.Unity.Utils;
 using NUnit.Framework;
 

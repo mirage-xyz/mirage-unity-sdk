@@ -1,6 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
-using MirageSDK.Plugins.WalletConnectSharp.Core;
+using MirageSDK.WalletConnectSharp.Core;
 using MirageSDK.WalletConnectSharp.Unity;
 using TMPro;
 using UnityEngine;
