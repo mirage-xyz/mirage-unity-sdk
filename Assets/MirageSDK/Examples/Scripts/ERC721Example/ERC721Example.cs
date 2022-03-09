@@ -13,15 +13,16 @@ namespace MirageSDK.Examples.ERC721Example
 	{
 		private const string MintMethodName = "mint";
 		private IContract _erc721Contract;
-		private IMirageSDK _mirageSdk;
+		private ICommonProvider _eth;
 
 		private void Start()
 		{
-			var _mirageSdk = MirageSDKWrapper.GetSDKInstance(ERC721ContractInformation.ProviderURL);
+			var mirageSDKWrapper = MirageSDKWrapper.GetSDKInstance(ERC721ContractInformation.ProviderURL);
 			_erc721Contract =
-				_mirageSdk.GetContract(
+				mirageSDKWrapper.GetContract(
 					ERC721ContractInformation.ContractAddress,
 					ERC721ContractInformation.ABI);
+			_eth = mirageSDKWrapper.Eth();
 		}
 
 		public async void CallMint()
@@ -29,7 +30,7 @@ namespace MirageSDK.Examples.ERC721Example
 			var receipt = await _erc721Contract.CallMethod(MintMethodName, Array.Empty<object>());
 			Debug.Log($"Receipt: {receipt}");
 
-			var trx = await _mirageSdk.Eth().GetTransaction(receipt);
+			var trx = await _eth.GetTransaction(receipt);
 
 			Debug.Log($"Nonce: {trx.Nonce}");
 		}

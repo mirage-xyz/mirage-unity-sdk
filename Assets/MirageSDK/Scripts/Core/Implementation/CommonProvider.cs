@@ -78,5 +78,4 @@ namespace MirageSDK.Core.Implementation
 			return signer.EncodeUTF8AndEcRecover(messageToCheck, signature);
 		}
 	}
-	
 }
