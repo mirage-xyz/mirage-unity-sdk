@@ -8,7 +8,7 @@ using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Network;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Utils;
 
-namespace WalletConnectSharp.Unity.Network
+namespace MirageSDK.WalletConnectSharp.Unity.Network
 {
     public class WebGlAESCipher : ICipher
     {

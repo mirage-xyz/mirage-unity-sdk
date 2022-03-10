@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Data;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
-using MirageSDK.Plugins.WalletConnectSharp.Unity;
+using MirageSDK.WalletConnectSharp.Unity;
 using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Contracts;
 using Nethereum.RPC.Eth.DTOs;
@@ -16,12 +17,13 @@ namespace MirageSDK.Core.Implementation
 		private readonly string _contractABI;
 		private readonly string _contractAddress;
 		private readonly IWeb3 _web3Provider;
-		private readonly IEthHandler _eth;
 
-		internal Contract(IWeb3 web3Provider, string contractAddress, string contractABI)
+		private readonly EthHandler _ethHandler;
+
+		internal Contract(IWeb3 web3Provider, EthHandler ethHandler, string contractAddress, string contractABI)
 		{
 			_web3Provider = web3Provider;
-			_eth = new EthHandler(_web3Provider);
+			_ethHandler = ethHandler;
 			_contractABI = contractABI;
 			_contractAddress = contractAddress;
 		}
@@ -47,10 +49,10 @@ namespace MirageSDK.Core.Implementation
 			string gasPrice = null, string nonce = null)
 		{
 			var transactionInput = CreateTransactionInput(methodName, arguments);
-			return _eth.SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
+			return MirageWalletHelper.SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 		}
 
-		public EventController Web3SendMethod(string methodName, object[] arguments,
+		public async Task Web3SendMethod(string methodName, object[] arguments,
 			EventController evController = null, string gas = null, string gasPrice = null, string nonce = null)
 		{
 			if (evController == null)
@@ -62,45 +64,43 @@ namespace MirageSDK.Core.Implementation
 
 			evController.InvokeSendingEvent(transactionInput);
 
-			var sendTransactionTask = _eth.SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
+			var sendTransactionTask =
+				MirageWalletHelper.SendTransaction(_contractAddress, transactionInput.Data, gas: gas);
 
 			evController.InvokeSentEvent(transactionInput);
 
-			sendTransactionTask.ContinueWith(task =>
-			{
-				if (!task.IsFaulted)
-				{
-					var transactionHash = task.Result;
-					evController.SetTransactionHash(transactionHash);
-					LoadReceipt(transactionHash, evController);
-				}
-				else
-				{
-					evController.SetError(task.Exception);
-				}
-			});
+			await sendTransactionTask;
 
-			return evController;
+			if (!sendTransactionTask.IsFaulted)
+			{
+				var transactionHash = sendTransactionTask.Result;
+				evController.InvokeTransactionHashReceived(transactionHash);
+				await LoadReceipt(transactionHash, evController);
+			}
+			else
+			{
+				evController.InvokeErrorReceived(sendTransactionTask.Exception);
+			}
 		}
 
-		private void LoadReceipt(string transactionHash, EventController evController)
+		private async UniTask LoadReceipt(string transactionHash, EventController evController)
 		{
-			var getReceiptTask = _eth.GetTransactionReceipt(transactionHash);
-			getReceiptTask.ContinueWith(task =>
+			var task = _ethHandler.GetTransactionReceipt(transactionHash);
+
+			await task;
+			
+			if (!task.IsFaulted)
 			{
-				if (!task.IsFaulted)
-				{
-					var receipt = task.Result;
-					evController.SetReceipt(receipt);
-				}
-				else
-				{
-					evController.SetError(task.Exception);
-				}
-			});
+				var receipt = task.Result;
+				evController.InvokeReceiptReceived(receipt);
+			}
+			else
+			{
+				evController.InvokeErrorReceived(task.Exception);
+			}
 		}
 
-		public TransactionInput CreateTransactionInput(string methodName, object[] arguments)
+		private TransactionInput CreateTransactionInput(string methodName, object[] arguments)
 		{
 			var activeSessionAccount = WalletConnect.ActiveSession.Accounts[0];
 			var contract = _web3Provider.Eth.GetContract(_contractABI, _contractAddress);

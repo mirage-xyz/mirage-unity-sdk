@@ -4,7 +4,7 @@ using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Examples.ContractMessages.ERC721;
 using MirageSDK.Examples.DTO;
-using MirageSDK.Plugins.WalletConnectSharp.Unity;
+using MirageSDK.WalletConnectSharp.Unity;
 using UnityEngine;
 
 namespace MirageSDK.Examples.ERC721Example
@@ -13,7 +13,7 @@ namespace MirageSDK.Examples.ERC721Example
 	{
 		private const string MintMethodName = "mint";
 		private IContract _erc721Contract;
-		private IEthHandler _eth;
+		private EthHandler _eth;
 
 		private void Start()
 		{

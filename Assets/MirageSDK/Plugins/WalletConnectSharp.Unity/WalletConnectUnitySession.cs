@@ -3,9 +3,8 @@ using MirageSDK.Plugins.WalletConnectSharp.Core;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Events;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Network;
-using MirageSDK.Plugins.WalletConnectSharp.Unity;
 
-namespace WalletConnectSharp.Unity
+namespace MirageSDK.WalletConnectSharp.Unity
 {
 	public class WalletConnectUnitySession : WalletConnectSession
 	{

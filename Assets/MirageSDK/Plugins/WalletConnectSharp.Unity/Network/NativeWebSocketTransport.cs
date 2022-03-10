@@ -10,7 +10,7 @@ using NativeWebSocket;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace WalletConnectSharp.Unity.Network
+namespace MirageSDK.WalletConnectSharp.Unity.Network
 {
 	public class NativeWebSocketTransport : MonoBehaviour, ITransport
 	{

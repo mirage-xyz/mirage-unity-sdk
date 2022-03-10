@@ -11,7 +11,7 @@ namespace MirageSDK.Core.Infrastructure
 		Task<string> CallMethod(string methodName, object[] arguments = null, string gas = null, string gasPrice = null,
 			string nonce = null);
 
-		EventController Web3SendMethod(string methodName, object[] arguments, EventController evController = null,
+		Task Web3SendMethod(string methodName, object[] arguments, EventController evController = null,
 			string gas = null, string gasPrice = null, string nonce = null);
 
 		Task<List<EventLog<TEvDto>>> GetAllChanges<TEvDto>(EventFilterData evFilter = null)

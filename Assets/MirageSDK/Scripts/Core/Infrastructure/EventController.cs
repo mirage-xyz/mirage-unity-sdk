@@ -21,17 +21,17 @@ namespace MirageSDK.Core.Infrastructure
 			OnSent?.Invoke(this, transaction);
 		}
 	
-		public void SetTransactionHash(string transactionHash)
+		public void InvokeTransactionHashReceived(string transactionHash)
 		{
 			OnTransactionHash?.Invoke(this, transactionHash);
 		}
 
-		public void SetReceipt(TransactionReceipt receipt)
+		public void InvokeReceiptReceived(TransactionReceipt receipt)
 		{
 			OnReceipt?.Invoke(this, receipt);
 		}
 
-		public void SetError(Exception error)
+		public void InvokeErrorReceived(Exception error)
 		{
 			OnError?.Invoke(this, error);
 		}

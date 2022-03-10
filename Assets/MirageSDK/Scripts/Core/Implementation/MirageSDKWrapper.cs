@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
 using MirageSDK.Core.Infrastructure;
-using MirageSDK.Plugins.WalletConnectSharp.Unity;
+using MirageSDK.WalletConnectSharp.Unity;
 using Nethereum.Web3;
 using WalletConnectSharp.NEthereum;
 
@@ -9,34 +8,14 @@ namespace MirageSDK.Core.Implementation
 {
 	public class MirageSDKWrapper : IMirageSDK
 	{
-		private readonly string _providerURI;
-		private readonly Dictionary<string, Web3> _web3Providers = new Dictionary<string, Web3>();
-		private IEthHandler _eth;
-		
-		public IEthHandler Eth
-		{
-			get { return _eth; }
-			private set { _eth = value; }
-		}
+		private readonly IWeb3 _web3Provider;
 
-		private MirageSDKWrapper()
-		{
-		}
+		public EthHandler Eth { get; }
 
 		private MirageSDKWrapper(string providerURI)
 		{
-			_providerURI = providerURI;
-			
-			var web3Provider = GetOrCreateWeb3Provider(_providerURI);
-			Eth = new EthHandler(web3Provider);
-		}
-
-		/// <summary>
-		/// Use this if you do not need to work with contracts or you want to use many web3 providers
-		/// </summary>
-		public static IMirageSDK GetSDKInstance()
-		{
-			return new MirageSDKWrapper();
+			_web3Provider = CreateWeb3Provider(providerURI);
+			Eth = new EthHandler(_web3Provider);
 		}
 
 		/// <summary>
@@ -50,64 +29,24 @@ namespace MirageSDK.Core.Implementation
 		}
 
 		/// <summary>
-		/// Creates a contract handler to work with web3 using provided contract address and contract ABI
-		/// </summary>
-		/// <param name="contractAddress"></param>
-		/// <param name="contractABI"></param>
-		/// <param name="providerURI"></param>
-		/// <returns></returns>
-		/// <exception cref="ArgumentException">
-		/// ProviderURI should be setup before usage of this method.
-		/// Provider URI can be setup with SetupProviderURI() Method
-		/// </exception>
-		public IContract GetContract(string contractAddress, string contractABI)
-		{
-			if (string.IsNullOrEmpty(_providerURI))
-			{
-				throw new ArgumentNullException(nameof(_providerURI));
-			}
-
-			var web3Provider = GetOrCreateWeb3Provider(_providerURI);
-			return GetContract(web3Provider, contractAddress, contractABI);
-		}
-		
-		public IContract GetContract(string providerURI, string contractAddress, string contractABI)
-		{
-			if (string.IsNullOrEmpty(providerURI))
-			{
-				throw new ArgumentNullException(nameof(providerURI));
-			}
-
-			var web3Provider = GetOrCreateWeb3Provider(providerURI);
-			return GetContract(web3Provider, contractAddress, contractABI);
-		}
-
-		/// <summary>
 		/// Creates a contract using provided web3 instance.
 		/// </summary>
-		/// <param name="web3">Web3 provider to process all further calls</param>
 		/// <param name="contractAddress">Contract address</param>
 		/// <param name="contractABI">Contract ABI</param>
 		/// <returns>Initialized contract handler</returns>
-		public IContract GetContract(IWeb3 web3, string contractAddress, string contractABI)
+		public IContract GetContract(string contractAddress, string contractABI)
 		{
-			return new Contract(web3, contractAddress, contractABI);
+			return new Contract(_web3Provider, Eth, contractAddress, contractABI);
 		}
 
-		private Web3 GetOrCreateWeb3Provider(string providerURI)
+		private static IWeb3 CreateWeb3Provider(string providerURI)
 		{
-			if (_web3Providers.ContainsKey(providerURI))
+			if (WalletConnect.Instance == null || WalletConnect.Instance.Session == null)
 			{
-				return _web3Providers[providerURI];
+				throw new ArgumentNullException(nameof(WalletConnect.Instance),
+					"WalletConnect should be initialized before creating web3Provider");
 			}
 
-			var web3Provider = CreateWeb3Provider(providerURI);
-			_web3Providers.Add(providerURI, web3Provider);
-			return web3Provider;
-		}
-
-		private static Web3 CreateWeb3Provider(string providerURI)
-		{
 			var wcProtocol = WalletConnect.Instance.Session;
 			var client = wcProtocol.CreateProvider(new Uri(providerURI));
 			var web3Provider = new Web3(client);

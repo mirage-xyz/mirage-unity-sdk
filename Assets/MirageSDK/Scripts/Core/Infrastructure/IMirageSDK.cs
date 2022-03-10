@@ -1,7 +1,9 @@
+using MirageSDK.Core.Implementation;
+
 namespace MirageSDK.Core.Infrastructure
 {
 	public interface IMirageSDK : IContractProvider
 	{
-		IEthHandler Eth { get; }
+		EthHandler Eth { get; }
 	}
 }

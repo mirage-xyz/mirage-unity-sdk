@@ -4,7 +4,7 @@ using UnityEngine.Networking;
 
 namespace MirageSDK.Core.Utils
 {
-	public static class MirageSDKHelpers
+	public static class MirageSDKHelper
 	{
 		public static string StringToBigInteger(string value)
 		{
@@ -12,15 +12,15 @@ namespace MirageSDK.Core.Utils
 			return "0x" + bnValue.ToString("X");
 		}
 
-		public static UnityWebRequest SendJSON(string url, string json)
+		public static UnityWebRequest GetUnityWebRequestFromJSON(string url, string json)
 		{
-			var requestU = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
+			var request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST);
 			var bytes = GetBytes(json);
 			var uH = new UploadHandlerRaw(bytes);
-			requestU.uploadHandler = uH;
-			requestU.SetRequestHeader("Content-Type", "application/json");
-			requestU.downloadHandler = new DownloadHandlerBuffer();
-			return requestU;
+			request.uploadHandler = uH;
+			request.SetRequestHeader("Content-Type", "application/json");
+			request.downloadHandler = new DownloadHandlerBuffer();
+			return request;
 		}
 
 		private static byte[] GetBytes(string str)

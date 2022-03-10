@@ -2,7 +2,7 @@ using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace MirageSDK.Plugins.WalletConnectSharp.Unity.Utils
+namespace MirageSDK.WalletConnectSharp.Unity.Utils
 {
 	public static class SessionSaveHandler
 	{

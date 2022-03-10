@@ -6,19 +6,16 @@ using Cysharp.Threading.Tasks;
 using MirageSDK.Plugins.WalletConnectSharp.Core;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Models;
 using MirageSDK.Plugins.WalletConnectSharp.Core.Network;
-using MirageSDK.Plugins.WalletConnectSharp.Unity.Models.DeepLink;
-using MirageSDK.Plugins.WalletConnectSharp.Unity.Utils;
+using MirageSDK.WalletConnectSharp.Unity.Models.DeepLink;
+using MirageSDK.WalletConnectSharp.Unity.Network;
+using MirageSDK.WalletConnectSharp.Unity.Utils;
 using UnityEngine;
 using UnityEngine.Events;
-using WalletConnectSharp.Unity;
-using WalletConnectSharp.Unity.Models;
-using WalletConnectSharp.Unity.Network;
-using WalletConnectSharp.Unity.Utils;
 #if UNITY_IOS
 using System.Net;
 #endif
 
-namespace MirageSDK.Plugins.WalletConnectSharp.Unity
+namespace MirageSDK.WalletConnectSharp.Unity
 {
 	[RequireComponent(typeof(NativeWebSocketTransport))]
 	public class WalletConnect : BindableMonoBehavior

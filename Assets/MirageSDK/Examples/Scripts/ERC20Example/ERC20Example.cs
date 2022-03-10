@@ -5,7 +5,7 @@ using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Examples.ContractMessages.ERC721;
 using MirageSDK.Examples.DTO;
-using MirageSDK.Plugins.WalletConnectSharp.Unity;
+using MirageSDK.WalletConnectSharp.Unity;
 using Nethereum.RPC.Eth.DTOs;
 using UnityEngine;
 
@@ -15,7 +15,7 @@ namespace MirageSDK.Examples.ERC20Example
 	{
 		private const string MintMethodName = "mint";
 		private IContract _erc20Contract;
-		private IEthHandler _eth;
+		private EthHandler _eth;
 
 		private void Start()
 		{
@@ -46,7 +46,7 @@ namespace MirageSDK.Examples.ERC20Example
 			evController.OnReceipt += HandleReceipt;
 			evController.OnError += HandleError;
 			
-			_erc20Contract.Web3SendMethod("mint", new object[0], evController);
+			_erc20Contract.Web3SendMethod("mint", Array.Empty<object>(), evController);
 		}
 		
 		public void HandleSent(object sender, TransactionInput transaction)
