@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using MirageSDK.Core.Data;
+using MirageSDK.Core.Events;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
 using MirageSDK.WalletConnectSharp.Unity;

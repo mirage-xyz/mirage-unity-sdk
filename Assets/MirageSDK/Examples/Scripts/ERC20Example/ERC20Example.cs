@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using MirageSDK.Core.Data;
+using MirageSDK.Core.Events;
 using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Examples.ContractMessages.ERC721;

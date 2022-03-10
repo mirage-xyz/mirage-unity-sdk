@@ -1,7 +1,7 @@
 using System;
 using Nethereum.RPC.Eth.DTOs;
 
-namespace MirageSDK.Core.Infrastructure
+namespace MirageSDK.Core.Events
 {
 	public class EventController
 	{

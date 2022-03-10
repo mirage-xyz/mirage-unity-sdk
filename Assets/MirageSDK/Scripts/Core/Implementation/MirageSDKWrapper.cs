@@ -19,7 +19,7 @@ namespace MirageSDK.Core.Implementation
 		}
 
 		/// <summary>
-		/// Use this if you want to work with contracts from a single web3 provider.
+		///     Use this if you want to work with contracts from a single web3 provider.
 		/// </summary>
 		/// <param name="providerURI"></param>
 		/// <returns></returns>
@@ -27,7 +27,7 @@ namespace MirageSDK.Core.Implementation
 		{
 			return new MirageSDKWrapper(providerURI);
 		}
-
+		
 		/// <summary>
 		/// Creates a contract using provided web3 instance.
 		/// </summary>
