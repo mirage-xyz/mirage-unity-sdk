@@ -5,8 +5,8 @@ using MirageSDK.Core.Implementation;
 using MirageSDK.Core.Infrastructure;
 using MirageSDK.Core.Utils;
 using Newtonsoft.Json;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 // This example is to demonstrate how to bind the wallet into user account. 
 namespace MirageSDK.Examples.UseCases.LinkingAccountWallet
@@ -29,7 +29,7 @@ namespace MirageSDK.Examples.UseCases.LinkingAccountWallet
 		// Message to be signed, which should be provided by the server
 		[SerializeField] private string _message = "Hahaha!";
 
-		[SerializeField] private Text _address;
+		[SerializeField] private TextMeshProUGUI _address;
 
 		private string _signature;
 
@@ -38,7 +38,7 @@ namespace MirageSDK.Examples.UseCases.LinkingAccountWallet
 
 		// A backend server to verify the ownership of this address using message and signature signed by 3rd party wallet
 		// an example can be found at https://github.com/mirage-xyz/mirage-go-demo/blob/main/main.go#L96
-		private const string URL = "http://2.56.91.78:8080/account/verification/address";
+		private const string URL = "http://root@eth-01.dccn.ankr.com:8080/account/verification/address";
 
 		private void Start()
 		{
