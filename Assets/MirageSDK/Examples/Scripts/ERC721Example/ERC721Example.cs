@@ -13,7 +13,7 @@ namespace MirageSDK.Examples.ERC721Example
 	{
 		private const string MintMethodName = "mint";
 		private IContract _erc721Contract;
-		private ICommonProvider _eth;
+		private IEthHandler _eth;
 
 		private void Start()
 		{
@@ -22,7 +22,7 @@ namespace MirageSDK.Examples.ERC721Example
 				mirageSDKWrapper.GetContract(
 					ERC721ContractInformation.ContractAddress,
 					ERC721ContractInformation.ABI);
-			_eth = mirageSDKWrapper.Eth();
+			_eth = mirageSDKWrapper.Eth;
 		}
 
 		public async void CallMint()

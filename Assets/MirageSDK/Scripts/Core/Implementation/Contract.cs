@@ -16,12 +16,12 @@ namespace MirageSDK.Core.Implementation
 		private readonly string _contractABI;
 		private readonly string _contractAddress;
 		private readonly IWeb3 _web3Provider;
-		private readonly ICommonProvider _eth;
+		private readonly IEthHandler _eth;
 
 		internal Contract(IWeb3 web3Provider, string contractAddress, string contractABI)
 		{
 			_web3Provider = web3Provider;
-			_eth = new CommonProvider(_web3Provider);
+			_eth = new EthHandler(_web3Provider);
 			_contractABI = contractABI;
 			_contractAddress = contractAddress;
 		}

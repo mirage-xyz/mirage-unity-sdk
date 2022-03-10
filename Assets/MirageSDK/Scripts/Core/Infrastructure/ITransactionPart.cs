@@ -3,7 +3,7 @@ using Nethereum.RPC.Eth.DTOs;
 
 namespace MirageSDK.Core.Infrastructure
 {
-	public interface ITransactionProvider
+	public interface ITransactionPart
 	{
 		Task<string> SendTransaction(
 			string to,

@@ -10,11 +10,11 @@ using Nethereum.Web3;
 
 namespace MirageSDK.Core.Implementation
 {
-	public class CommonProvider : ICommonProvider
+	public class EthHandler : IEthHandler
 	{
 		private readonly IWeb3 _web3Provider;
 		
-		public CommonProvider(IWeb3 web3Provider)
+		public EthHandler(IWeb3 web3Provider)
 		{
 			_web3Provider = web3Provider;
 		}

@@ -11,7 +11,13 @@ namespace MirageSDK.Core.Implementation
 	{
 		private readonly string _providerURI;
 		private readonly Dictionary<string, Web3> _web3Providers = new Dictionary<string, Web3>();
-		private readonly ICommonProvider _commonProvider;
+		private IEthHandler _eth;
+		
+		public IEthHandler Eth
+		{
+			get { return _eth; }
+			private set { _eth = value; }
+		}
 
 		private MirageSDKWrapper()
 		{
@@ -22,7 +28,7 @@ namespace MirageSDK.Core.Implementation
 			_providerURI = providerURI;
 			
 			var web3Provider = GetOrCreateWeb3Provider(_providerURI);
-			_commonProvider = new CommonProvider(web3Provider);
+			Eth = new EthHandler(web3Provider);
 		}
 
 		/// <summary>
@@ -63,11 +69,6 @@ namespace MirageSDK.Core.Implementation
 
 			var web3Provider = GetOrCreateWeb3Provider(_providerURI);
 			return GetContract(web3Provider, contractAddress, contractABI);
-		}
-
-		public ICommonProvider Eth()
-		{
-			return _commonProvider;
 		}
 		
 		public IContract GetContract(string providerURI, string contractAddress, string contractABI)
