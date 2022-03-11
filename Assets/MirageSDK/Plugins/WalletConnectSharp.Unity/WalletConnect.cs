@@ -40,10 +40,10 @@ namespace MirageSDK.WalletConnectSharp.Unity
 		}
 
 		[SerializeField] private Wallets _defaultWallet = Wallets.MetaMask;
-		[SerializeField] private bool _autoSaveAndResume = true;
+		[SerializeField] public bool autoSaveAndResume = true;
 		[SerializeField] private bool _connectOnAwake;
 		[SerializeField] private bool _connectOnStart = true;
-		[SerializeField] private bool _createNewSessionOnSessionDisconnect = true;
+		[SerializeField] public bool createNewSessionOnSessionDisconnect = true;
 		[SerializeField] private int _connectSessionRetryCount = 3;
 		[SerializeField] private string _customBridgeUrl = "https://testbridge.yartu.io/";
 		[SerializeField] private int _chainId = 1;
@@ -66,7 +66,7 @@ namespace MirageSDK.WalletConnectSharp.Unity
 
 		public event EventHandler ConnectionStarted;
 
-		public bool CreateNewSessionOnSessionDisconnect => _createNewSessionOnSessionDisconnect;
+		public bool CreateNewSessionOnSessionDisconnect => createNewSessionOnSessionDisconnect;
 
 		public bool ConnectOnStart
 		{
@@ -128,7 +128,7 @@ namespace MirageSDK.WalletConnectSharp.Unity
 			{
 				await SaveOrDisconnect();
 			}
-			else if (SessionSaveHandler.IsSessionSaved() && _autoSaveAndResume)
+			else if (SessionSaveHandler.IsSessionSaved() && autoSaveAndResume)
 			{
 				await Connect();
 			}
@@ -409,15 +409,19 @@ namespace MirageSDK.WalletConnectSharp.Unity
 		{
 			DisconnectedEvent?.Invoke(ActiveSession);
 
-			if (_autoSaveAndResume && SessionSaveHandler.IsSessionSaved())
+			if (autoSaveAndResume && SessionSaveHandler.IsSessionSaved())
 			{
 				SessionSaveHandler.ClearSession();
 			}
 
-			if (_createNewSessionOnSessionDisconnect)
+			if (createNewSessionOnSessionDisconnect)
 			{
 				await Connect();
 			}
+		}
+		
+		public async void DisconnectWallet() {
+			await Session.Disconnect();
 		}
 
 		private async UniTask SetupDefaultWallet()
@@ -448,7 +452,7 @@ namespace MirageSDK.WalletConnectSharp.Unity
 				return;
 			}
 
-			if (_autoSaveAndResume)
+			if (autoSaveAndResume)
 			{
 				var sessionToSave = Session.GetSavedSession();
 				SessionSaveHandler.SaveSession(sessionToSave);
